@@ -1,0 +1,419 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 11 15 25;
+    --foreground: 248 250 252;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #0a0e18;
+    color: #e2e8f0;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* =============================================
+   VINTAGE FLIP CLOCK — Single Divided Card Style
+   ============================================= */
+
+.flip-clock-unit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.vintage-flip-card {
+  position: relative;
+  width: 76px;
+  height: 94px;
+  background: linear-gradient(180deg, #172033 0%, #101827 50%, #0c121e 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 12px 28px -4px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 700px;
+}
+
+@media (min-width: 640px) {
+  .vintage-flip-card {
+    width: 98px;
+    height: 118px;
+    border-radius: 16px;
+  }
+}
+
+@media (min-width: 768px) {
+  .vintage-flip-card {
+    width: 114px;
+    height: 136px;
+    border-radius: 18px;
+  }
+}
+
+/* Horizontal center slit / groove divider */
+.vintage-flip-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: #070a12;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), 0 -1px 0 rgba(0, 0, 0, 0.9);
+  z-index: 25;
+  pointer-events: none;
+}
+
+/* Mechanical side notches */
+.vintage-notch-left {
+  position: absolute;
+  left: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 12px;
+  background: #07090e;
+  border-radius: 0 6px 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: none;
+  z-index: 30;
+}
+
+.vintage-notch-right {
+  position: absolute;
+  right: -2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 12px;
+  background: #07090e;
+  border-radius: 6px 0 0 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: none;
+  z-index: 30;
+}
+
+/* Full crisp vintage digits */
+.vintage-digit-text {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .vintage-digit-text {
+    font-size: 3.75rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .vintage-digit-text {
+    font-size: 4.5rem;
+  }
+}
+
+/* Smooth top-to-bottom flip animation */
+@keyframes flipDownMotion {
+  0% {
+    transform: perspective(600px) rotateX(-90deg);
+    opacity: 0.3;
+  }
+  65% {
+    transform: perspective(600px) rotateX(12deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: perspective(600px) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-flip-down {
+  animation: flipDownMotion 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform-origin: top center;
+}
+
+/* =============================================
+   MINIATURE VINTAGE FLIP CLOCK
+   ============================================= */
+
+.vintage-flip-card-mini {
+  position: relative;
+  width: 44px;
+  height: 52px;
+  background: linear-gradient(180deg, #172033 0%, #101827 50%, #0c121e 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 6px 16px -2px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 500px;
+}
+
+@media (min-width: 640px) {
+  .vintage-flip-card-mini {
+    width: 52px;
+    height: 62px;
+    border-radius: 12px;
+  }
+}
+
+.vintage-flip-card-mini::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1.5px;
+  background: #070a12;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.08), 0 -1px 0 rgba(0, 0, 0, 0.9);
+  z-index: 25;
+  pointer-events: none;
+}
+
+.vintage-digit-text-mini {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .vintage-digit-text-mini {
+    font-size: 1.85rem;
+  }
+}
+
+/* =============================================
+   VAST PROJECTION FLIP CLOCK (Extended Stadium Scale)
+   ============================================= */
+
+.vintage-flip-card-vast {
+  position: relative;
+  width: 88px;
+  height: 112px;
+  background: linear-gradient(180deg, #172033 0%, #101827 50%, #0c121e 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 24px 50px -10px rgba(0, 0, 0, 0.95),
+    inset 0 2px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 900px;
+}
+
+@media (min-width: 640px) {
+  .vintage-flip-card-vast {
+    width: 135px;
+    height: 165px;
+    border-radius: 20px;
+  }
+}
+
+@media (min-width: 768px) {
+  .vintage-flip-card-vast {
+    width: 175px;
+    height: 210px;
+    border-radius: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vintage-flip-card-vast {
+    width: 210px;
+    height: 250px;
+    border-radius: 28px;
+  }
+}
+
+.vintage-flip-card-vast::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  background: #070a12;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12), 0 -1px 0 rgba(0, 0, 0, 0.95);
+  z-index: 25;
+  pointer-events: none;
+}
+
+.vintage-digit-text-vast {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.95);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+@media (min-width: 640px) {
+  .vintage-digit-text-vast {
+    font-size: 5.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .vintage-digit-text-vast {
+    font-size: 7.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vintage-digit-text-vast {
+    font-size: 8.5rem;
+  }
+}
+
+/* Glassmorphic Card */
+.cyber-card {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+}
+
+.cyber-card:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+}
+
+/* Neon Text Glows */
+.text-glow-red {
+  text-shadow: 0 0 12px rgba(244, 63, 94, 0.6), 0 0 24px rgba(244, 63, 94, 0.3);
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 12px rgba(6, 182, 212, 0.6), 0 0 24px rgba(6, 182, 212, 0.3);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 14px rgba(245, 158, 11, 0.7), 0 0 28px rgba(245, 158, 11, 0.35);
+}
+
+/* Monospace Numbers Font for Timers and Scores */
+.font-mono-numbers {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* TOP 7 vs rest visual distinction */
+.team-row-top {
+  border-left: 3px solid rgba(6, 182, 212, 0.6);
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.05) 0%, transparent 100%);
+}
+
+.team-row-rank1 {
+  border-left: 3px solid rgba(245, 158, 11, 0.8);
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%);
+}
+
+.team-row-rank2 {
+  border-left: 3px solid rgba(148, 163, 184, 0.7);
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.07) 0%, transparent 100%);
+}
+
+.team-row-rank3 {
+  border-left: 3px solid rgba(180, 120, 60, 0.7);
+  background: linear-gradient(90deg, rgba(180, 120, 60, 0.08) 0%, transparent 100%);
+}
+
+.team-row-rest {
+  border-left: 2px solid rgba(255,255,255,0.04);
+  opacity: 0.85;
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #080c14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
+}
+
+@keyframes oldFlipAway {
+  from { transform: rotateX(0deg); }
+  to   { transform: rotateX(-90deg); }
+}
+
+@keyframes newFlipIn {
+  from { transform: rotateX(90deg); }
+  to   { transform: rotateX(0deg); }
+}

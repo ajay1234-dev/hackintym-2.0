@@ -1,0 +1,41 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Next.js build output
+/.next/
+/out/
+
+# Production build artifacts
+/build
+/dist
+
+# Environment variables & secrets (keep .env.example tracked, ignore actual keys)
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug & npm logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js telemetry & diagnostics
+next-env.d.ts
+.vercel
+
+# Operating System & IDE files
+.DS_Store
+*.pem
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# TypeScript build cache
+*.tsbuildinfo
