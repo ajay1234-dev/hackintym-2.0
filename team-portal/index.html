@@ -97,6 +97,7 @@
       teamsList.forEach((team) => {
         const isSelected = selectedTeam && (selectedTeam.id === team.id || selectedTeam.teamId === team.teamId);
         const leader = team.members && team.members.length > 0 ? team.members[0] : null;
+        const isLocked = Boolean(team.profileLocked || (team.avatar && team.avatar.trim()));
 
         const card = document.createElement("div");
         card.className = `p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left relative flex flex-col justify-between ${
@@ -115,12 +116,12 @@
                 <span class="w-6 h-6 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow">
                   <i class="bi bi-check-lg"></i>
                 </span>
-              ` : team.avatar ? `
-                <span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1 font-mono-numbers">
-                  <i class="bi bi-check-circle-fill text-xs"></i> Photo Set
+              ` : isLocked ? `
+                <span class="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1 font-mono-numbers">
+                  <i class="bi bi-lock-fill text-xs"></i> Locked ✓
                 </span>
               ` : `
-                <span class="text-[10px] font-bold text-slate-500 font-mono-numbers">No Photo</span>
+                <span class="text-[10px] font-bold text-slate-500 font-mono-numbers">Awaiting Upload</span>
               `}
             </div>
 
@@ -151,8 +152,8 @@
           </div>
 
           <div class="mt-3 pt-2 border-t border-slate-800/60 text-right">
-            <span class="text-[10px] font-black uppercase tracking-wider font-display ${isSelected ? 'text-cyan-400' : 'text-slate-500'}">
-              ${isSelected ? 'Selected ✓' : 'Tap to Select →'}
+            <span class="text-[10px] font-black uppercase tracking-wider font-display ${isSelected ? 'text-cyan-400' : isLocked ? 'text-amber-400/80' : 'text-slate-500'}">
+              ${isSelected ? (isLocked ? 'Selected (Locked) ✓' : 'Selected ✓') : (isLocked ? 'View Profile 🔒' : 'Tap to Select →')}
             </span>
           </div>
         `;
@@ -167,6 +168,7 @@
 
     function selectTeam(team) {
       selectedTeam = team;
+      const isLocked = Boolean(team.profileLocked || (team.avatar && team.avatar.trim()));
       renderTeamsGrid();
 
       // Show drawer
@@ -185,11 +187,34 @@
       selectedFile = null;
       fileInput.value = "";
 
+      // Notice banners & Lock state
+      const lockedBanner = document.getElementById("lockedNoticeBanner");
+      const unlockedBanner = document.getElementById("unlockedNoticeBanner");
+      const lockedSubmitMsg = document.getElementById("lockedSubmitMsg");
+
+      if (isLocked) {
+        lockedBanner.classList.remove("hidden");
+        unlockedBanner.classList.add("hidden");
+        fileInput.disabled = true;
+        taglineInput.disabled = true;
+        taglineInput.classList.add("cursor-not-allowed", "bg-slate-950/60", "text-slate-400");
+        submitBtn.classList.add("hidden");
+        lockedSubmitMsg.classList.remove("hidden");
+      } else {
+        lockedBanner.classList.add("hidden");
+        unlockedBanner.classList.remove("hidden");
+        fileInput.disabled = false;
+        taglineInput.disabled = false;
+        taglineInput.classList.remove("cursor-not-allowed", "bg-slate-950/60", "text-slate-400");
+        submitBtn.classList.remove("hidden");
+        lockedSubmitMsg.classList.add("hidden");
+      }
+
       if (team.avatar) {
         imagePreview.src = team.avatar;
         imagePreviewContainer.classList.remove("hidden");
         emptyPreviewState.classList.add("hidden");
-        previewFilename.textContent = "Current Photo Active";
+        previewFilename.textContent = isLocked ? "Official Team Photo (Locked)" : "Current Photo Active";
       } else {
         imagePreviewContainer.classList.add("hidden");
         emptyPreviewState.classList.remove("hidden");
@@ -204,6 +229,8 @@
     }
 
     fileInput.addEventListener("change", (e) => {
+      const isLocked = Boolean(selectedTeam && (selectedTeam.profileLocked || (selectedTeam.avatar && selectedTeam.avatar.trim())));
+      if (isLocked) return;
       if (e.target.files && e.target.files[0]) {
         selectedFile = e.target.files[0];
         const reader = new FileReader();
@@ -222,6 +249,17 @@
       e.preventDefault();
       if (!selectedTeam) {
         showAlert("Please choose your team from the grid first.", "error");
+        return;
+      }
+
+      const isLocked = Boolean(selectedTeam.profileLocked || (selectedTeam.avatar && selectedTeam.avatar.trim()));
+      if (isLocked) {
+        showAlert("This profile is locked and cannot be changed.", "error");
+        return;
+      }
+
+      if (!selectedFile && !selectedTeam.avatar) {
+        showAlert("Please choose a team picture to upload.", "error");
         return;
       }
 
@@ -260,10 +298,11 @@
         await updateDoc(teamDocRef, {
           avatar: avatarUrl,
           tagline: taglineInput.value.trim(),
+          profileLocked: true,
           updatedAt: Date.now()
         });
 
-        showAlert(`Success! ${selectedTeam.teamName}'s profile photo and punchline have been saved and synced to the live leaderboard!`, "success");
+        showAlert(`Success! ${selectedTeam.teamName}'s profile photo and punchline have been submitted and locked. It is now active on the official leaderboard!`, "success");
         selectedFile = null;
         fileInput.value = "";
       } catch (err) {
@@ -403,11 +442,31 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-800">
           <div>
             <span class="text-[10px] font-black uppercase tracking-widest text-cyan-400 font-display">
-              Step 2: Upload Photo & Tagline
+              Step 2: Team Profile & Punchline
             </span>
             <h2 id="drawerTeamName" class="text-xl sm:text-2xl font-black text-white font-display tracking-tight mt-0.5"></h2>
-            <p id="drawerTeamLeader" class="text-xs text-amber-300 mt-1"></p>
+            <p id="drawerTeamLeader" class="text-xs text-amber-300 mt-1 font-sans"></p>
           </div>
+        </div>
+
+        <!-- Lock Status Banners -->
+        <div id="lockedNoticeBanner" class="hidden mb-6 p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 text-amber-300 text-xs sm:text-sm font-semibold flex items-center gap-3.5 shadow-lg">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 text-lg shrink-0">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-extrabold text-amber-200 uppercase tracking-wide font-display">Profile Submitted & Locked</p>
+            <p class="text-xs text-amber-300/90 mt-0.5 font-sans">
+              Notice: This team profile has already been submitted and locked. Once submitted, profile photos and taglines cannot be changed.
+            </p>
+          </div>
+        </div>
+
+        <div id="unlockedNoticeBanner" class="mb-6 p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs flex items-center gap-3 font-sans">
+          <i class="bi bi-info-circle-fill text-sky-400 text-base shrink-0"></i>
+          <span>
+            <strong>Important Notice:</strong> Once submitted, your team profile photo and tagline cannot be changed. Please verify before clicking submit.
+          </span>
         </div>
 
         <form id="uploadForm" class="space-y-6">
@@ -456,10 +515,15 @@
             </p>
           </div>
 
-          <!-- Submit -->
+          <!-- Submit or Locked Message -->
+          <div id="lockedSubmitMsg" class="hidden w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-amber-300 font-bold text-xs sm:text-sm uppercase tracking-wider cursor-not-allowed font-display shadow-inner">
+            <i class="bi bi-lock-fill text-amber-400"></i>
+            <span>Profile Locked — Submitted & Cannot Be Modified</span>
+          </div>
+
           <button id="submitBtn" type="submit" class="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-rose-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg shadow-cyan-950/40 disabled:opacity-40 disabled:cursor-not-allowed font-display">
             <i id="submitBtnSpinner" class="bi bi-arrow-repeat animate-spin text-base hidden"></i>
-            <span id="submitBtnText">Save & Publish to Leaderboard</span>
+            <span id="submitBtnText">Submit & Lock Team Profile</span>
           </button>
         </form>
       </div>

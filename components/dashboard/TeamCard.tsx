@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Team } from "@/types";
 
 interface TeamCardProps {
@@ -14,18 +15,21 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   onSelectTeam,
 }) => {
   const [highlight, setHighlight] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     setHighlight(true);
-    const timer = setTimeout(() => setHighlight(false), 1500);
+    const timer = setTimeout(() => setHighlight(false), 1800);
     return () => clearTimeout(timer);
   }, [team.score, team.points, team.review1Score, team.review2Score, team.review3Score]);
 
+  const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
-  const isTop7 = rank != null && rank <= 7;
+  const isTop7 = hasScore && rank != null && rank <= 7;
+  const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
   const getRankBadge = () => {
-    if (!rank) {
+    if (!rank || !hasScore) {
       return (
         <span className="px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 font-mono-numbers font-bold text-xs">
           —
@@ -68,11 +72,20 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   };
 
   return (
-    <div
+    <motion.div
+      layout
+      layoutId={`card-${team.id || team.teamId}`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{
+        layout: { type: "spring", stiffness: 350, damping: 28 },
+        opacity: { duration: 0.2 },
+      }}
       onClick={() => onSelectTeam(team)}
       className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.99] ${
         highlight
-          ? "bg-rose-500/15 border-rose-500/50 shadow-rose-950/30"
+          ? "bg-rose-500/20 border-rose-500/60 shadow-rose-950/40"
           : isTop7
           ? rank === 1
             ? "bg-gradient-to-r from-amber-500/10 via-slate-900/90 to-slate-950 border-amber-500/40"
@@ -105,10 +118,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
       {/* Team Name & Track */}
       <div className="mb-3 flex items-start gap-3">
-        {team.avatar ? (
+        {showAvatar ? (
           <img
             src={team.avatar}
             alt={team.teamName}
+            onError={() => setImgError(true)}
             className="w-10 h-10 rounded-xl object-cover border border-cyan-500/40 shrink-0 shadow-sm"
           />
         ) : (
@@ -177,6 +191,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         <span className="text-slate-400 font-medium">Tap to view full team card & leader</span>
         <i className="bi bi-chevron-right text-xs text-cyan-400" />
       </div>
-    </div>
+    </motion.div>
   );
 };

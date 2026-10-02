@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { AnimatePresence } from "framer-motion";
 import { Team } from "@/types";
 import { TeamRow } from "./TeamRow";
 import { TeamCard } from "./TeamCard";
@@ -17,6 +18,18 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 }) => {
   const [selectedTrack, setSelectedTrack] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+
+  // Sync selectedTeam with the latest realtime teams array so modal always shows up-to-date avatar & score
+  const activeSelectedTeam = useMemo(() => {
+    if (!selectedTeam) return null;
+    return (
+      teams.find(
+        (t) =>
+          (t.id && t.id === selectedTeam.id) ||
+          (t.teamId && t.teamId === selectedTeam.teamId)
+      ) || selectedTeam
+    );
+  }, [teams, selectedTeam]);
 
   const tracks = useMemo(() => {
     const set = new Set<string>();
@@ -35,8 +48,10 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return teams.length > 0 ? Math.max(...teams.map((t) => t.score || 0)) : 1000;
   }, [teams]);
 
-  // Split into top 7 and rest of teams (only evaluated teams with rank <= 7 are in top 7)
-  const top7 = filteredTeams.filter((t) => t.rank != null && t.rank <= 7);
+  // Split into top 7 and rest of teams (strictly evaluated teams with score > 0 and rank <= 7 are in top 7)
+  const top7 = filteredTeams.filter(
+    (t) => (t.score || 0) > 0 && t.rank != null && t.rank <= 7
+  );
   const rest = filteredTeams.filter((t) => !top7.includes(t));
 
   return (
@@ -118,29 +133,33 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-amber-900/20">
-                    {top7.map((team) => (
-                      <TeamRow
-                        key={team.id || team.teamId}
-                        team={team}
-                        maxScore={maxScore}
-                        isTop7Section={true}
-                        onSelectTeam={(t) => setSelectedTeam(t)}
-                      />
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {top7.map((team) => (
+                        <TeamRow
+                          key={team.id || team.teamId}
+                          team={team}
+                          maxScore={maxScore}
+                          isTop7Section={true}
+                          onSelectTeam={(t) => setSelectedTeam(t)}
+                        />
+                      ))}
+                    </AnimatePresence>
                   </tbody>
                 </table>
               </div>
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-2.5">
-                {top7.map((team) => (
-                  <TeamCard
-                    key={team.id || team.teamId}
-                    team={team}
-                    maxScore={maxScore}
-                    onSelectTeam={(t) => setSelectedTeam(t)}
-                  />
-                ))}
+                <AnimatePresence initial={false}>
+                  {top7.map((team) => (
+                    <TeamCard
+                      key={team.id || team.teamId}
+                      team={team}
+                      maxScore={maxScore}
+                      onSelectTeam={(t) => setSelectedTeam(t)}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
           )}
@@ -186,29 +205,33 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/60">
-                    {rest.map((team) => (
-                      <TeamRow
-                        key={team.id || team.teamId}
-                        team={team}
-                        maxScore={maxScore}
-                        isTop7Section={false}
-                        onSelectTeam={(t) => setSelectedTeam(t)}
-                      />
-                    ))}
+                    <AnimatePresence initial={false}>
+                      {rest.map((team) => (
+                        <TeamRow
+                          key={team.id || team.teamId}
+                          team={team}
+                          maxScore={maxScore}
+                          isTop7Section={false}
+                          onSelectTeam={(t) => setSelectedTeam(t)}
+                        />
+                      ))}
+                    </AnimatePresence>
                   </tbody>
                 </table>
               </div>
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-2">
-                {rest.map((team) => (
-                  <TeamCard
-                    key={team.id || team.teamId}
-                    team={team}
-                    maxScore={maxScore}
-                    onSelectTeam={(t) => setSelectedTeam(t)}
-                  />
-                ))}
+                <AnimatePresence initial={false}>
+                  {rest.map((team) => (
+                    <TeamCard
+                      key={team.id || team.teamId}
+                      team={team}
+                      maxScore={maxScore}
+                      onSelectTeam={(t) => setSelectedTeam(t)}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
           )}
@@ -217,7 +240,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
       {/* Separate Team Card Modal (Shown when clicked) */}
       <TeamDetailsModal
-        team={selectedTeam}
+        team={activeSelectedTeam}
         topScore={maxScore}
         onClose={() => setSelectedTeam(null)}
       />

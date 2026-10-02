@@ -26,11 +26,12 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
 
   if (!team) return null;
 
-  const scoreDeficit = Math.max(0, topScore - team.score);
+  const hasScore = (team.score || 0) > 0;
+  const scoreDeficit = hasScore ? Math.max(0, topScore - team.score) : 0;
   const rank = team.rank;
 
   const getRankBadge = () => {
-    if (!rank) {
+    if (!rank || !hasScore) {
       return {
         label: "⏳ AWAITING REVIEW 1",
         style: "text-slate-400 border-slate-800 bg-slate-900/90",
@@ -110,11 +111,16 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
         {/* Team Avatar & Name Heading */}
         <div className="mb-6 flex items-center gap-4">
           {team.avatar ? (
-            <img
-              src={team.avatar}
-              alt={team.teamName}
-              className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-cyan-500/40 shadow-lg shrink-0"
-            />
+            <div className="relative shrink-0">
+              <img
+                src={team.avatar}
+                alt={team.teamName}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-xl shadow-cyan-950/40"
+              />
+              <span className="absolute -bottom-1 -right-1 bg-emerald-500 text-slate-950 text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full border border-emerald-300 font-mono-numbers flex items-center gap-0.5 shadow">
+                <i className="bi bi-check-lg" />
+              </span>
+            </div>
           ) : (
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center font-black text-xl sm:text-2xl font-mono-numbers text-cyan-400 shrink-0 shadow-inner">
               {team.teamName.substring(0, 2).toUpperCase()}
@@ -124,8 +130,11 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display truncate">
               {team.teamName}
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Official competition team standings card
+            <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5">
+              <span>Official competition roster card</span>
+              {team.avatar && (
+                <span className="text-cyan-400 font-bold">• Photo Verified ✓</span>
+              )}
             </p>
           </div>
         </div>
@@ -191,7 +200,7 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
             <span className="text-xs text-rose-400 font-bold ml-1.5">pts</span>
           </div>
 
-          {rank !== 1 && scoreDeficit > 0 && (
+          {hasScore && rank !== 1 && scoreDeficit > 0 && (
             <div className="text-right">
               <span className="text-[10px] font-bold uppercase text-slate-500 font-display block">
                 Gap to #1

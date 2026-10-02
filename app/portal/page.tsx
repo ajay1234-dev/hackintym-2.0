@@ -28,6 +28,10 @@ export default function TeamPortalPage() {
     (t) => t.id === selectedTeamId || t.teamId === selectedTeamId
   );
 
+  const isSelectedTeamLocked = Boolean(
+    selectedTeam && (selectedTeam.profileLocked || (selectedTeam.avatar && selectedTeam.avatar.trim()))
+  );
+
   const handleSelectTeam = (team: Team) => {
     const id = team.id || team.teamId;
     setSelectedTeamId(id);
@@ -44,6 +48,7 @@ export default function TeamPortalPage() {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSelectedTeamLocked) return;
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (!file.type.startsWith("image/")) {
@@ -68,6 +73,16 @@ export default function TeamPortalPage() {
       return;
     }
 
+    if (isSelectedTeamLocked) {
+      setErrorMessage("This profile has already been submitted and cannot be changed.");
+      return;
+    }
+
+    if (!selectedFile && !selectedTeam.avatar) {
+      setErrorMessage("Please select a team photo before submitting.");
+      return;
+    }
+
     setIsUploading(true);
     setErrorMessage(null);
     try {
@@ -83,10 +98,11 @@ export default function TeamPortalPage() {
       await updateTeamProfile(targetId, {
         avatar: avatarUrl,
         tagline: tagline.trim(),
+        profileLocked: true,
       });
 
       setUploadSuccess(
-        `Success! ${selectedTeam.teamName}'s profile photo and tagline have been updated and are live on the leaderboard!`
+        `Success! ${selectedTeam.teamName}'s profile photo and punchline have been submitted and locked. It is now live across the leaderboard and team cards.`
       );
       setSelectedFile(null);
     } catch (err) {
@@ -176,6 +192,7 @@ export default function TeamPortalPage() {
                 const id = team.id || team.teamId;
                 const isSelected = selectedTeamId === id || selectedTeamId === team.teamId;
                 const leader = team.members && team.members.length > 0 ? team.members[0] : null;
+                const isLocked = Boolean(team.profileLocked || (team.avatar && team.avatar.trim()));
 
                 return (
                   <div
@@ -198,13 +215,13 @@ export default function TeamPortalPage() {
                           <span className="w-6 h-6 rounded-full bg-cyan-400 text-slate-950 flex items-center justify-center text-xs font-black shadow">
                             <i className="bi bi-check-lg" />
                           </span>
-                        ) : team.avatar ? (
-                          <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1 font-mono-numbers">
-                            <i className="bi bi-check-circle-fill text-xs" /> Photo Set
+                        ) : isLocked ? (
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1 font-mono-numbers">
+                            <i className="bi bi-lock-fill text-xs" /> Locked ✓
                           </span>
                         ) : (
                           <span className="text-[10px] font-bold text-slate-500 font-mono-numbers">
-                            No Photo
+                            Awaiting Upload
                           </span>
                         )}
                       </div>
@@ -252,8 +269,8 @@ export default function TeamPortalPage() {
                     </div>
 
                     <div className="mt-3 pt-2 border-t border-slate-800/60 text-right">
-                      <span className={`text-[10px] font-black uppercase tracking-wider font-display ${isSelected ? "text-cyan-400" : "text-slate-500"}`}>
-                        {isSelected ? "Selected ✓" : "Tap to Select →"}
+                      <span className={`text-[10px] font-black uppercase tracking-wider font-display ${isSelected ? "text-cyan-400" : isLocked ? "text-amber-400/80" : "text-slate-500"}`}>
+                        {isSelected ? (isLocked ? "Selected (Locked) ✓" : "Selected ✓") : (isLocked ? "View Profile 🔒" : "Tap to Select →")}
                       </span>
                     </div>
                   </div>
@@ -269,9 +286,16 @@ export default function TeamPortalPage() {
             <div className="rounded-3xl bg-slate-900 border-2 border-cyan-500/50 shadow-2xl p-6 sm:p-9 animate-fadeIn">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-800">
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 font-display">
-                    Step 2: Upload Photo & Tagline
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 font-display">
+                      Step 2: Team Profile & Punchline
+                    </span>
+                    {isSelectedTeamLocked && (
+                      <span className="text-[10px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/40 flex items-center gap-1 font-mono-numbers">
+                        <i className="bi bi-lock-fill text-xs" /> Profile Locked
+                      </span>
+                    )}
+                  </div>
                   <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight mt-0.5">
                     {selectedTeam.teamName} ({selectedTeam.teamId})
                   </h2>
@@ -290,6 +314,30 @@ export default function TeamPortalPage() {
                   Change Team
                 </button>
               </div>
+
+              {/* Status Banner */}
+              {isSelectedTeamLocked ? (
+                <div className="mb-6 p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500/40 text-amber-300 text-xs sm:text-sm font-semibold flex items-center gap-3.5 shadow-lg">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400 flex items-center justify-center text-amber-300 text-lg shrink-0">
+                    <i className="bi bi-shield-lock-fill" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-extrabold text-amber-200 uppercase tracking-wide font-display">
+                      Profile Submitted & Locked
+                    </p>
+                    <p className="text-xs text-amber-300/90 mt-0.5 font-sans">
+                      Notice: This team profile has already been submitted and locked. Once submitted, profile photos and taglines cannot be changed. The photo and punchline are actively displayed on the official leaderboard.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-6 p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs flex items-center gap-3 font-sans">
+                  <i className="bi bi-info-circle-fill text-sky-400 text-base shrink-0" />
+                  <span>
+                    <strong>Important Notice:</strong> Once submitted, your team profile photo and tagline cannot be changed. Please verify before clicking submit.
+                  </span>
+                </div>
+              )}
 
               {uploadSuccess && (
                 <div className="mb-6 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs sm:text-sm font-semibold flex items-center gap-3 shadow-md">
@@ -317,45 +365,69 @@ export default function TeamPortalPage() {
                 {/* 1. Team Photo Upload */}
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-slate-300 mb-2 font-display">
-                    Team Profile Photo / Avatar
+                    Team Profile Photo / Avatar {isSelectedTeamLocked && <span className="text-amber-400 lowercase font-mono-numbers">(locked)</span>}
                   </label>
 
-                  <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 sm:p-8 text-center bg-slate-950/60 transition-colors cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
-                    />
+                  {isSelectedTeamLocked ? (
+                    <div className="border border-slate-800 rounded-2xl p-6 sm:p-8 text-center bg-slate-950/60 relative">
+                      {previewUrl ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <img
+                            src={previewUrl}
+                            alt="Locked Profile"
+                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-amber-400/80 shadow-xl"
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-slate-200">
+                              Official Team Photo Active
+                            </p>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 mt-1 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30 font-mono-numbers">
+                              <i className="bi bi-lock-fill text-xs" /> Profile Locked — Cannot be changed
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-slate-500">No photo uploaded.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 sm:p-8 text-center bg-slate-950/60 transition-colors cursor-pointer relative">
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={handleFileChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
+                      />
 
-                    {previewUrl ? (
-                      <div className="flex flex-col items-center gap-3">
-                        <img
-                          src={previewUrl}
-                          alt="Preview"
-                          className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-cyan-400 shadow-xl"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-slate-200">
-                            {selectedFile ? selectedFile.name : "Current Photo Active"}
+                      {previewUrl ? (
+                        <div className="flex flex-col items-center gap-3">
+                          <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-cyan-400 shadow-xl"
+                          />
+                          <div>
+                            <p className="text-xs font-bold text-slate-200">
+                              {selectedFile ? selectedFile.name : "Current Photo Active"}
+                            </p>
+                            <p className="text-[11px] text-cyan-400 mt-0.5">Click or drag a new picture to change</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl mb-1">
+                            <i className="bi bi-image" />
+                          </div>
+                          <p className="text-xs sm:text-sm font-bold text-slate-200">
+                            Click to browse or drag & drop team picture
                           </p>
-                          <p className="text-[11px] text-cyan-400 mt-0.5">Click or drag a new picture to change</p>
+                          <p className="text-[11px] text-slate-500">
+                            PNG, JPG, or WebP up to 10MB • Square crop recommended
+                          </p>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-2xl mb-1">
-                          <i className="bi bi-image" />
-                        </div>
-                        <p className="text-xs sm:text-sm font-bold text-slate-200">
-                          Click to browse or drag & drop team picture
-                        </p>
-                        <p className="text-[11px] text-slate-500">
-                          PNG, JPG, or WebP up to 10MB • Square crop recommended
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 2. Team Tagline / Punchline Input */}
@@ -371,35 +443,49 @@ export default function TeamPortalPage() {
                     <input
                       type="text"
                       maxLength={120}
+                      disabled={isSelectedTeamLocked}
                       value={tagline}
                       onChange={(e) => setTagline(e.target.value)}
-                      placeholder="e.g. Innovate. Elevate. Dominate."
-                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 focus:border-cyan-500 text-white text-xs sm:text-sm focus:outline-none shadow-sm font-sans"
+                      placeholder={isSelectedTeamLocked ? "No tagline set" : "e.g. Innovate. Elevate. Dominate."}
+                      className={`w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-950 border text-xs sm:text-sm font-sans ${
+                        isSelectedTeamLocked
+                          ? "border-slate-800 text-slate-400 cursor-not-allowed bg-slate-950/60"
+                          : "border-slate-800 focus:border-cyan-500 text-white focus:outline-none shadow-sm"
+                      }`}
                     />
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1.5 font-sans">
-                    A catchy slogan or punchline for your team (max 120 characters).
+                    {isSelectedTeamLocked
+                      ? "This tagline is locked and displayed on the official team info card."
+                      : "A catchy slogan or punchline for your team (max 120 characters)."}
                   </p>
                 </div>
 
-                {/* 3. Submit Button */}
-                <button
-                  type="submit"
-                  disabled={isUploading}
-                  className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-rose-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg shadow-cyan-950/40 disabled:opacity-40 disabled:cursor-not-allowed font-display"
-                >
-                  {isUploading ? (
-                    <>
-                      <i className="bi bi-arrow-repeat animate-spin text-base" />
-                      <span>Saving & Syncing to Live Leaderboard...</span>
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-check2-circle text-lg" />
-                      <span>Save & Publish to Leaderboard</span>
-                    </>
-                  )}
-                </button>
+                {/* 3. Submit or Locked Button */}
+                {isSelectedTeamLocked ? (
+                  <div className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-slate-900 border border-slate-800 text-amber-300 font-bold text-xs sm:text-sm uppercase tracking-wider cursor-not-allowed font-display shadow-inner">
+                    <i className="bi bi-lock-fill text-amber-400" />
+                    <span>Profile Locked — Submitted & Cannot Be Modified</span>
+                  </div>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isUploading}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500 via-rose-500 to-purple-500 hover:from-cyan-400 hover:to-purple-400 text-white font-black text-xs sm:text-sm uppercase tracking-wider transition-all shadow-lg shadow-cyan-950/40 disabled:opacity-40 disabled:cursor-not-allowed font-display"
+                  >
+                    {isUploading ? (
+                      <>
+                        <i className="bi bi-arrow-repeat animate-spin text-base" />
+                        <span>Saving & Syncing to Live Leaderboard...</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check2-circle text-lg" />
+                        <span>Submit & Lock Team Profile</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </form>
             </div>
           ) : (

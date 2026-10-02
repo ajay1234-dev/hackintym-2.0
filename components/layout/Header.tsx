@@ -115,15 +115,6 @@ export const Header: React.FC<HeaderProps> = ({ status, adminUser }) => {
               <span className="hidden md:inline">Timer Screen</span>
             </Link>
 
-            {/* Team Photo Portal Button */}
-            <Link
-              href="/portal"
-              title="Team Profile & Photo Upload Portal"
-              className="p-2 sm:px-3 sm:py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-white transition-all flex items-center gap-1.5 shadow-md text-xs font-bold font-display"
-            >
-              <i className="bi bi-camera text-cyan-400" />
-              <span className="hidden md:inline">Team Portal</span>
-            </Link>
 
             {/* Audio Toggle Button */}
             <button

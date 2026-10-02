@@ -62,13 +62,6 @@ export default function Home() {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <a
-              href="/portal"
-              className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors flex items-center gap-1"
-            >
-              <i className="bi bi-camera-fill text-xs" />
-              <span>Team Photo Portal</span>
-            </a>
             <span className="flex items-center gap-2 font-mono-numbers text-slate-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Live Realtime Sync

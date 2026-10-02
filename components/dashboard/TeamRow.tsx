@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Team } from "@/types";
 
 interface TeamRowProps {
@@ -16,17 +17,20 @@ export const TeamRow: React.FC<TeamRowProps> = ({
   onSelectTeam,
 }) => {
   const [highlight, setHighlight] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     setHighlight(true);
-    const timer = setTimeout(() => setHighlight(false), 1500);
+    const timer = setTimeout(() => setHighlight(false), 1800);
     return () => clearTimeout(timer);
   }, [team.score, team.points, team.review1Score, team.review2Score, team.review3Score]);
 
+  const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
+  const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
   const getRankBadge = () => {
-    if (!rank) {
+    if (!rank || !hasScore) {
       return (
         <span
           title="Awaiting Review Evaluation"
@@ -72,7 +76,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
   };
 
   const getDelta = () => {
-    if (!rank || !team.rankDelta || team.rankDelta === 0) return null;
+    if (!rank || !hasScore || !team.rankDelta || team.rankDelta === 0) return null;
     if (team.rankDelta > 0) {
       return (
         <span className="text-[11px] font-bold text-emerald-400 font-mono-numbers flex items-center">
@@ -89,8 +93,8 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   // Row styling
   const rowClass = highlight
-    ? "bg-rose-500/15 border-rose-400/50 shadow-md"
-    : isTop7Section && rank && rank <= 7
+    ? "bg-rose-500/20 border-rose-400/60 shadow-lg shadow-rose-950/40"
+    : isTop7Section && rank && hasScore && rank <= 7
     ? rank === 1
       ? "team-row-rank1 hover:brightness-110"
       : rank === 2
@@ -101,9 +105,18 @@ export const TeamRow: React.FC<TeamRowProps> = ({
     : "team-row-rest hover:bg-slate-900/60 hover:opacity-100";
 
   return (
-    <tr
+    <motion.tr
+      layout
+      layoutId={team.id || team.teamId}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{
+        layout: { type: "spring", stiffness: 350, damping: 28 },
+        opacity: { duration: 0.2 },
+      }}
       onClick={() => onSelectTeam(team)}
-      className={`group cursor-pointer transition-all duration-200 border-b border-slate-800/60 ${rowClass}`}
+      className={`group cursor-pointer transition-colors duration-200 border-b border-slate-800/60 ${rowClass}`}
       title="Click to view full team card and members"
     >
       {/* 1. Rank Column */}
@@ -118,10 +131,11 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       <td className="py-4 px-4 whitespace-nowrap">
         <div className="flex items-center gap-3">
           {/* Team Avatar Photo OR Initials Fallback */}
-          {team.avatar ? (
+          {showAvatar ? (
             <img
               src={team.avatar}
               alt={team.teamName}
+              onError={() => setImgError(true)}
               className={`shrink-0 rounded-xl object-cover border shadow-sm ${
                 isTop7Section
                   ? "w-10 h-10 border-amber-400/60 shadow-[0_0_10px_rgba(251,191,36,0.3)]"
@@ -133,13 +147,13 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               className={`shrink-0 rounded-xl flex items-center justify-center font-black font-mono-numbers border shadow-sm ${
                 isTop7Section ? "w-10 h-10 text-sm" : "w-8 h-8 text-xs"
               } ${
-                rank === 1
+                rank === 1 && hasScore
                   ? "bg-amber-500/20 border-amber-400 text-amber-300"
-                  : rank === 2
+                  : rank === 2 && hasScore
                   ? "bg-slate-700/60 border-slate-400 text-slate-200"
-                  : rank === 3
+                  : rank === 3 && hasScore
                   ? "bg-amber-950/60 border-amber-600 text-amber-400"
-                  : isTop7Section
+                  : isTop7Section && hasScore
                   ? "bg-cyan-900/40 border-cyan-500/50 text-cyan-300"
                   : "bg-slate-950 border-slate-800 text-slate-400"
               }`}
@@ -162,7 +176,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800 font-mono-numbers">
                 {team.teamId}
               </span>
-              {isTop7Section && rank != null && rank <= 3 && (
+              {isTop7Section && hasScore && rank != null && rank <= 3 && (
                 <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-display">
                   {rank === 1 ? "CHAMPION" : rank === 2 ? "RUNNER-UP" : "PODIUM"}
                 </span>
@@ -244,6 +258,6 @@ export const TeamRow: React.FC<TeamRowProps> = ({
           </div>
         </div>
       </td>
-    </tr>
+    </motion.tr>
   );
 };

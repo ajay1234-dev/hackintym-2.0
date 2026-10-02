@@ -55,8 +55,9 @@ export const AdminLeaderboardPreview: React.FC<AdminLeaderboardPreviewProps> = (
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {teams.map((team) => {
-                const rank = team.rank;
-                const isTop7 = rank != null && rank <= 7;
+                const hasScore = (team.score || 0) > 0;
+                const rank = hasScore ? team.rank : undefined;
+                const isTop7 = Boolean(hasScore && rank != null && rank <= 7);
                 return (
                   <tr
                     key={team.id || team.teamId}

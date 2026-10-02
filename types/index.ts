@@ -16,6 +16,7 @@ export interface Team {
   track?: string;
   avatar?: string;
   tagline?: string;
+  profileLocked?: boolean;
   updatedAt: number;
   rank?: number;
   prevRank?: number;

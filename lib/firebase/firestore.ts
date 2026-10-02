@@ -59,12 +59,15 @@ function saveLocalConfig(config: HackathonConfig) {
 }
 
 export function processAndRankTeams(teams: Team[]): Team[] {
-  // A team is evaluated if they have any review score > 0 or a total score > 0
-  const isEvaluated = (t: Team) =>
-    (t.score != null && t.score > 0) ||
-    (t.review1Score != null && t.review1Score > 0) ||
-    (t.review2Score != null && t.review2Score > 0) ||
-    (t.review3Score != null && t.review3Score > 0);
+  // A team is evaluated strictly if they have review scores > 0 or total score > 0
+  const isEvaluated = (t: Team) => {
+    const reviewSum =
+      (Number(t.review1Score) || 0) +
+      (Number(t.review2Score) || 0) +
+      (Number(t.review3Score) || 0);
+    const scoreVal = Number(t.score) || 0;
+    return reviewSum > 0 || scoreVal > 0;
+  };
 
   // Check if at least one team in the competition has been evaluated
   const anyEvaluated = teams.some(isEvaluated);
@@ -87,7 +90,9 @@ export function processAndRankTeams(teams: Team[]): Team[] {
     if (aEval && !bEval) return -1;
     if (!aEval && bEval) return 1;
 
-    if (b.score !== a.score) return b.score - a.score;
+    const aScore = a.score || 0;
+    const bScore = b.score || 0;
+    if (bScore !== aScore) return bScore - aScore;
     if (b.points !== a.points) return b.points - a.points;
     return a.teamName.localeCompare(b.teamName);
   });
@@ -113,21 +118,24 @@ export function processAndRankTeams(teams: Team[]): Team[] {
 // Helper to compute total score from reviews
 function computeTotalScore(team: Partial<Team>): number {
   return (
-    (team.review1Score || 0) +
-    (team.review2Score || 0) +
-    (team.review3Score || 0)
+    (Number(team.review1Score) || 0) +
+    (Number(team.review2Score) || 0) +
+    (Number(team.review3Score) || 0)
   );
 }
 
 export async function updateTeamAvatar(teamId: string, avatarUrl: string) {
-  return updateTeam(teamId, { avatar: avatarUrl });
+  return updateTeam(teamId, { avatar: avatarUrl, profileLocked: true });
 }
 
 export async function updateTeamProfile(
   teamId: string,
-  profile: { avatar?: string; tagline?: string }
+  profile: { avatar?: string; tagline?: string; profileLocked?: boolean }
 ) {
-  return updateTeam(teamId, profile);
+  return updateTeam(teamId, {
+    ...profile,
+    profileLocked: true,
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -180,6 +188,7 @@ export function subscribeToTeams(callback: (teams: Team[]) => void): () => void 
               track: data.track || "General Track",
               avatar: data.avatar || "",
               tagline: data.tagline || "",
+              profileLocked: Boolean(data.profileLocked) || Boolean(data.avatar && data.avatar.trim()),
               updatedAt: data.updatedAt?.toMillis
                 ? data.updatedAt.toMillis()
                 : (data.updatedAt || Date.now()),
@@ -303,10 +312,10 @@ export async function bulkPublishReviewScores(
   if (isFirebaseConfigured && db) {
     try {
       const batch = writeBatch(db);
-      for (const [teamDocId, reviewScore] of Object.entries(scores)) {
-        const teamRef = doc(db, "teams", teamDocId);
-        // We need to recompute total from existing + this review
-        const existing = updated.find((t) => t.id === teamDocId || t.teamId === teamDocId);
+      for (const [keyId, reviewScore] of Object.entries(scores)) {
+        const existing = updated.find((t) => t.id === keyId || t.teamId === keyId);
+        const actualDocId = existing?.id || keyId;
+        const teamRef = doc(db, "teams", actualDocId);
         const totalScore = existing ? existing.score : reviewScore;
         batch.set(
           teamRef,
@@ -382,6 +391,7 @@ export async function createTeam(data: Omit<Team, "id" | "updatedAt">) {
 
 export async function updateTeam(teamId: string, data: Partial<Team>) {
   const teams = getLocalTeams();
+  const target = teams.find((t) => t.id === teamId || t.teamId === teamId);
   const updated = teams.map((t) => {
     if (t.id === teamId || t.teamId === teamId) {
       const patched = { ...t, ...data, updatedAt: Date.now() };
@@ -394,7 +404,8 @@ export async function updateTeam(teamId: string, data: Partial<Team>) {
 
   if (isFirebaseConfigured && db) {
     try {
-      const teamRef = doc(db, "teams", teamId);
+      const actualDocId = target?.id || teamId;
+      const teamRef = doc(db, "teams", actualDocId);
       await setDoc(teamRef, { ...data, updatedAt: Date.now() }, { merge: true });
     } catch (err) {
       console.error("Firestore updateTeam error:", err);
@@ -404,12 +415,14 @@ export async function updateTeam(teamId: string, data: Partial<Team>) {
 
 export async function deleteTeam(teamId: string) {
   const teams = getLocalTeams();
+  const target = teams.find((t) => t.id === teamId || t.teamId === teamId);
   const updated = teams.filter((t) => t.id !== teamId && t.teamId !== teamId);
   saveLocalTeams(updated);
 
   if (isFirebaseConfigured && db) {
     try {
-      await deleteDoc(doc(db, "teams", teamId));
+      const actualDocId = target?.id || teamId;
+      await deleteDoc(doc(db, "teams", actualDocId));
     } catch (err) {
       console.error("Firestore deleteTeam error:", err);
     }
