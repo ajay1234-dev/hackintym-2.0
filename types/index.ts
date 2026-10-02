@@ -31,6 +31,7 @@ export interface HackathonConfig {
   endTime: number | null;
   durationHours: number;
   currentRound?: string;
+  pausedRemainingMs?: number | null;
   updatedAt: number;
 }
 

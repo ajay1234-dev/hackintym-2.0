@@ -69,29 +69,29 @@ export const Header: React.FC<HeaderProps> = ({ status, adminUser }) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-2xl transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 py-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between min-h-16 sm:h-20 py-2 sm:py-3 gap-2">
           
           {/* Logo & Subtitle */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="relative flex items-center justify-center p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 group-hover:border-rose-500/50 transition-all duration-300 shadow-lg shadow-slate-950/50">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3.5 group min-w-0">
+            <div className="relative flex items-center justify-center p-1 sm:p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 group-hover:border-rose-500/50 transition-all duration-300 shadow-lg shadow-slate-950/50 shrink-0">
               <img
                 src="/logo.png"
                 alt="HackinTym'26 2.0 Logo"
-                className="h-10 sm:h-11 w-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
+                className="h-8 sm:h-11 w-auto object-contain rounded-xl group-hover:scale-105 transition-transform duration-300"
               />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl sm:text-2xl font-extrabold tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-white group-hover:via-cyan-400 group-hover:to-rose-400 transition-all">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-base sm:text-2xl font-extrabold tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-white group-hover:via-cyan-400 group-hover:to-rose-400 transition-all truncate">
                   HackinTym'26 2.0
                 </span>
                 <span className="hidden sm:inline-block text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-mono-numbers">
                   30H
                 </span>
               </div>
-              <p className="text-[10px] tracking-widest font-semibold uppercase text-slate-400 group-hover:text-slate-300 mt-0.5">
+              <p className="text-[9px] sm:text-[10px] tracking-widest font-semibold uppercase text-slate-400 group-hover:text-slate-300 mt-0.5 truncate">
                 INTRA-COLLEGE HACKATHON
               </p>
             </div>

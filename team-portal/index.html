@@ -4,8 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HackinTym'26 2.0 • Team Profile & Photo Portal</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" type="image/png" href="logo.png" />
+  <!-- Production Compiled Tailwind CSS -->
+  <link rel="stylesheet" href="portal.css" />
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <!-- Google Fonts -->
@@ -41,10 +44,10 @@
       appId: "1:887906563882:web:0ac5e61eb998a2728fd053"
     };
 
-    // Cloudinary Upload Configuration (Optional)
+    // Cloudinary Upload Configuration
     const CLOUDINARY_CONFIG = {
-      cloudName: "", // Set your Cloudinary Cloud Name here (e.g. "my-hackathon")
-      uploadPreset: "hackintime" // Set your unsigned upload preset name here
+      cloudName: "due6rlfst",
+      uploadPreset: "hackintime"
     };
 
     const app = initializeApp(appConfig);
@@ -307,7 +310,11 @@
         fileInput.value = "";
       } catch (err) {
         console.error(err);
-        showAlert("Failed to update profile. Please try again.", "error");
+        if (err && (err.code === "permission-denied" || (err.message && err.message.includes("permission")))) {
+          showAlert("Permission Denied: Please update your Firestore Security Rules in the Firebase Console to allow team updates.", "error");
+        } else {
+          showAlert(err?.message || "Failed to update profile. Please try again.", "error");
+        }
       } finally {
         setLoading(false);
       }

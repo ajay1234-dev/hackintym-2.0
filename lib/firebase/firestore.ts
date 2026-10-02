@@ -252,6 +252,7 @@ export function subscribeToHackathonConfig(
               endTime: data.endTime || null,
               durationHours: Number(data.durationHours) || 30,
               currentRound: data.currentRound || "",
+              pausedRemainingMs: data.pausedRemainingMs != null ? Number(data.pausedRemainingMs) : null,
               updatedAt: data.updatedAt || Date.now(),
             };
             saveLocalConfig(configObj);
@@ -431,22 +432,36 @@ export async function deleteTeam(teamId: string) {
 
 export async function setHackathonStatus(status: EventStatus, durationHours: number = 30) {
   const now = Date.now();
+  const cur = getLocalConfig();
   let startTime: number | null = null;
   let endTime: number | null = null;
+  let pausedRemainingMs: number | null = null;
 
   if (status === "LIVE") {
-    startTime = now;
-    endTime = now + durationHours * 3600 * 1000;
+    // If resuming from PAUSED, restore remaining time
+    if (cur.eventStatus === "PAUSED" && cur.pausedRemainingMs != null && cur.pausedRemainingMs > 0) {
+      startTime = now;
+      endTime = now + cur.pausedRemainingMs;
+      pausedRemainingMs = null;
+    } else {
+      startTime = now;
+      endTime = now + durationHours * 3600 * 1000;
+      pausedRemainingMs = null;
+    }
   } else if (status === "ENDED") {
     startTime = now - durationHours * 3600 * 1000;
     endTime = now;
+    pausedRemainingMs = 0;
   } else if (status === "UPCOMING") {
     startTime = null;
     endTime = null;
+    pausedRemainingMs = null;
   } else if (status === "PAUSED") {
-    const cur = getLocalConfig();
     startTime = cur.startTime;
     endTime = cur.endTime;
+    // Calculate exact ms remaining at moment of pause
+    const rem = cur.endTime ? Math.max(0, cur.endTime - now) : durationHours * 3600 * 1000;
+    pausedRemainingMs = rem;
   }
 
   const newConfig: HackathonConfig = {
@@ -455,6 +470,7 @@ export async function setHackathonStatus(status: EventStatus, durationHours: num
     startTime,
     endTime,
     durationHours,
+    pausedRemainingMs,
     updatedAt: now,
   };
 
@@ -471,4 +487,84 @@ export async function setHackathonStatus(status: EventStatus, durationHours: num
 
 export async function resetHackathon(durationHours: number = 30) {
   await setHackathonStatus("UPCOMING", durationHours);
+}
+
+/**
+ * Custom Timer Settings API:
+ * Supports setting custom duration (hours + mins), live quick extensions (+/- mins),
+ * setting exact remaining countdown time, and setting target end timestamp.
+ */
+export async function updateCustomTimer(options: {
+  durationHours?: number;
+  minutesDelta?: number;
+  exactRemainingMinutes?: number;
+  targetEndTime?: number;
+}): Promise<HackathonConfig> {
+  const now = Date.now();
+  const cur = getLocalConfig();
+  const updatedConfig: HackathonConfig = { ...cur, updatedAt: now };
+
+  if (options.durationHours != null && options.durationHours > 0) {
+    updatedConfig.durationHours = options.durationHours;
+    if (cur.eventStatus === "UPCOMING" || !cur.startTime) {
+      updatedConfig.startTime = null;
+      updatedConfig.endTime = null;
+      updatedConfig.pausedRemainingMs = null;
+    }
+  }
+
+  if (options.minutesDelta != null) {
+    const deltaMs = options.minutesDelta * 60 * 1000;
+    if (cur.eventStatus === "LIVE") {
+      const currentEnd = cur.endTime || (now + (cur.durationHours || 30) * 3600 * 1000);
+      updatedConfig.endTime = Math.max(now, currentEnd + deltaMs);
+    } else if (cur.eventStatus === "PAUSED") {
+      const curRem =
+        cur.pausedRemainingMs ??
+        (cur.endTime ? Math.max(0, cur.endTime - now) : (cur.durationHours || 30) * 3600 * 1000);
+      const newRem = Math.max(0, curRem + deltaMs);
+      updatedConfig.pausedRemainingMs = newRem;
+      updatedConfig.endTime = now + newRem;
+    } else if (cur.eventStatus === "UPCOMING") {
+      const newDuration = Math.max(0.25, (cur.durationHours || 30) + options.minutesDelta / 60);
+      updatedConfig.durationHours = Number(newDuration.toFixed(2));
+    }
+  }
+
+  if (options.exactRemainingMinutes != null && options.exactRemainingMinutes >= 0) {
+    const totalMs = options.exactRemainingMinutes * 60 * 1000;
+    if (cur.eventStatus === "LIVE") {
+      updatedConfig.endTime = now + totalMs;
+    } else if (cur.eventStatus === "PAUSED") {
+      updatedConfig.pausedRemainingMs = totalMs;
+      updatedConfig.endTime = now + totalMs;
+    } else {
+      updatedConfig.durationHours = Number((options.exactRemainingMinutes / 60).toFixed(2));
+    }
+  }
+
+  if (options.targetEndTime != null && options.targetEndTime > now) {
+    updatedConfig.endTime = options.targetEndTime;
+    if (cur.eventStatus === "UPCOMING" || !cur.startTime) {
+      updatedConfig.startTime = now;
+      updatedConfig.eventStatus = "LIVE";
+    }
+    const totalDurationHours = Math.max(
+      0.25,
+      (options.targetEndTime - (updatedConfig.startTime || now)) / (3600 * 1000)
+    );
+    updatedConfig.durationHours = Number(totalDurationHours.toFixed(2));
+  }
+
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "hackathon", "config"), updatedConfig);
+    } catch (err) {
+      console.error("Firestore updateCustomTimer error:", err);
+    }
+  }
+
+  return updatedConfig;
 }

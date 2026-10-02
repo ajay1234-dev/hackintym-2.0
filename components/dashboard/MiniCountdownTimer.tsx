@@ -66,7 +66,8 @@ export const MiniCountdownTimer: React.FC<MiniCountdownTimerProps> = ({ config }
       return { status: "UPCOMING", remainingMs: durationMs };
     }
     if (eventStatus === "PAUSED") {
-      return { status: "PAUSED", remainingMs: Math.max(0, endTime - cur) };
+      const rem = config.pausedRemainingMs != null ? config.pausedRemainingMs : Math.max(0, endTime - cur);
+      return { status: "PAUSED", remainingMs: rem };
     }
     if (eventStatus === "ENDED" || cur >= endTime) {
       return { status: "ENDED", remainingMs: 0 };

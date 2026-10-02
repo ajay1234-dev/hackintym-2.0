@@ -101,7 +101,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ config, vast = f
       return { status: "UPCOMING", remainingMs: durationMs, progressPercent: 0 };
     }
     if (eventStatus === "PAUSED") {
-      const rem = Math.max(0, endTime - cur);
+      const rem = config.pausedRemainingMs != null ? config.pausedRemainingMs : Math.max(0, endTime - cur);
       const prog = Math.min(100, Math.max(0, ((durationMs - rem) / durationMs) * 100));
       return { status: "PAUSED", remainingMs: rem, progressPercent: prog };
     }
@@ -182,7 +182,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({ config, vast = f
         </div>
 
         {/* Vintage Flip Clock Display */}
-        <div className={`relative z-10 flex items-center justify-center py-4 ${vast ? "gap-4 sm:gap-8 lg:gap-12" : "gap-3 sm:gap-6"}`}>
+        <div className={`relative z-10 flex items-center justify-center py-4 ${vast ? "gap-2 xs:gap-3 sm:gap-6 lg:gap-12" : "gap-2 sm:gap-6"}`}>
           {isExpired ? (
             <div className="flex flex-col items-center py-8 gap-3 text-center">
               <div className="w-16 h-16 rounded-3xl bg-purple-500/15 border border-purple-500/40 flex items-center justify-center text-purple-400 text-3xl mb-1 shadow-lg">

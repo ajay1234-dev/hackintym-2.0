@@ -5,6 +5,7 @@ import Link from "next/link";
 import { HackathonConfig } from "@/types";
 import { subscribeToHackathonConfig } from "@/lib/firebase/firestore";
 import { CountdownTimer } from "@/components/dashboard/CountdownTimer";
+import { CustomTimerModal } from "@/components/admin/CustomTimerModal";
 import { INITIAL_HACKATHON_CONFIG } from "@/lib/firebase/mockData";
 import { soundManager } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ export default function TimerPage() {
   const [config, setConfig] = useState<HackathonConfig>(INITIAL_HACKATHON_CONFIG);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [showCustomModal, setShowCustomModal] = useState(false);
 
   useEffect(() => {
     setSoundOn(soundManager.isEnabled());
@@ -88,6 +90,15 @@ export default function TimerPage() {
             <span className="hidden sm:inline">{isFullscreen ? "Exit Fullscreen" : "Fullscreen"}</span>
           </button>
 
+          <button
+            onClick={() => setShowCustomModal(true)}
+            title="Custom Timer Settings & Quick Extension"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white text-xs font-bold transition-all shadow-md font-display"
+          >
+            <i className="bi bi-sliders text-cyan-400" />
+            <span className="hidden sm:inline">Timer Settings</span>
+          </button>
+
           <Link
             href="/"
             className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-500/20 to-cyan-500/20 hover:from-rose-500/30 hover:to-cyan-500/30 border border-slate-700/80 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md font-display"
@@ -109,6 +120,13 @@ export default function TimerPage() {
       <footer className="relative z-10 text-center py-2 text-xs text-slate-500 font-display">
         HackinTym'26 2.0 • 30-Hour Official Intra-College Hackathon
       </footer>
+
+      {/* Custom Timer Modal */}
+      <CustomTimerModal
+        isOpen={showCustomModal}
+        config={config}
+        onClose={() => setShowCustomModal(false)}
+      />
     </div>
   );
 }
