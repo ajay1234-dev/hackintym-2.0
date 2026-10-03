@@ -74,6 +74,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
   return (
     <motion.div
+      id={`team-card-${team.id || team.teamId}`}
       layout
       layoutId={`card-${team.id || team.teamId}`}
       initial={{ opacity: 0, y: 10 }}

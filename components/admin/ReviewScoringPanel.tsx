@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Team } from "@/types";
 import { bulkPublishReviewScores } from "@/lib/firebase/firestore";
 import { VintageGameBoardCeremony } from "@/components/dashboard/VintageGameBoardCeremony";
+import { CasioPublishingModal } from "./CasioPublishingModal";
 
 type ReviewNum = 1 | 2 | 3;
 
@@ -21,6 +22,7 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
   const [isPublishing, setIsPublishing] = useState(false);
   const [published, setPublished] = useState<ReviewNum[]>([]);
   const [isCeremonyOpen, setIsCeremonyOpen] = useState(false);
+  const [isCasioPublishOpen, setIsCasioPublishOpen] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Pre-fill inputs from existing team review scores when team list or active review changes
@@ -227,42 +229,52 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
             {/* Publish & Vintage Game Board Ceremony Buttons */}
             <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
               <button
-                onClick={handlePublish}
+                type="button"
+                onClick={() => setIsCasioPublishOpen(true)}
                 disabled={isPublishing || teams.length === 0}
-                className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-black font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-950/30 disabled:opacity-40 disabled:cursor-not-allowed font-display"
+                className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-950/40 disabled:opacity-40 disabled:cursor-not-allowed font-display"
+                title="Cinematic Casio digital scoring ceremony revealing scores ascending from least to Rank 1"
               >
-                {isPublishing ? (
-                  <>
-                    <i className="bi bi-arrow-repeat animate-spin text-sm" />
-                    Publishing...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-send-fill text-sm" />
-                    Publish Review {activeReview} Scores for All Teams
-                  </>
-                )}
+                <i className="bi bi-clock-history text-sm" />
+                <span>Publish Review {activeReview} (Casio Sequential Scoring)</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setIsCeremonyOpen(true)}
-                disabled={teams.length === 0}
-                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/60 text-cyan-300 font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 font-display disabled:opacity-40"
-                title="Play vintage arcade ascending score ceremony from least score to Rank 1"
+                onClick={handlePublish}
+                disabled={isPublishing || teams.length === 0}
+                className="w-full sm:w-auto px-4 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-sm font-display disabled:opacity-40"
+                title="Publish all entered scores immediately without animation"
               >
-                <i className="bi bi-joystick text-base text-cyan-400" />
-                <span>Launch Ceremony</span>
+                {isPublishing ? (
+                  <i className="bi bi-arrow-repeat animate-spin text-sm" />
+                ) : (
+                  <i className="bi bi-lightning-fill text-amber-400 text-sm" />
+                )}
+                <span>Instant Save</span>
               </button>
             </div>
 
             {/* Score totals hint */}
             <p className="mt-2 text-center text-[10px] text-slate-500 font-sans">
-              Total score = Review 1 + Review 2 + Review 3 · Vintage Ceremony reveals scores ascending to Rank 1
+              Casio scoring mode flips random numbers at high speed and reveals marks sequentially from least to Rank 1
             </p>
           </>
         )}
       </div>
+
+      {/* CASIO DIGITAL SEQUENTIAL PUBLISHING CEREMONY */}
+      <CasioPublishingModal
+        isOpen={isCasioPublishOpen}
+        reviewNum={activeReview}
+        scores={scores}
+        teams={teams}
+        onClose={() => setIsCasioPublishOpen(false)}
+        onFinished={() => {
+          if (!published.includes(activeReview)) setPublished((p) => [...p, activeReview]);
+          onNotification?.(`Review ${activeReview} scores published with Casio digital scoring ceremony!`);
+        }}
+      />
 
       {/* VINTAGE GAME BOARD SCORING CEREMONY MODAL */}
       <VintageGameBoardCeremony

@@ -107,6 +107,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   return (
     <motion.tr
+      id={`team-row-${team.id || team.teamId}`}
       layout
       layoutId={team.id || team.teamId}
       initial={{ opacity: 0, y: 10 }}
@@ -117,7 +118,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
         opacity: { duration: 0.2 },
       }}
       onClick={() => onSelectTeam(team)}
-      className={`group cursor-pointer transition-colors duration-200 border-b border-slate-800/60 ${rowClass}`}
+      className={`motion-row group cursor-pointer transition-colors duration-200 border-b border-slate-800/60 ${rowClass}`}
       title="Click to view full team card and members"
     >
       {/* 1. Rank Column */}

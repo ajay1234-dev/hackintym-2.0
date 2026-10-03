@@ -430,6 +430,69 @@ export async function deleteTeam(teamId: string) {
   }
 }
 
+export async function removeTeamPhoto(
+  teamId: string,
+  avatarUrl?: string
+): Promise<{ success: boolean; cloudDeleted: boolean; message: string }> {
+  let cloudDeleted = false;
+  let message = "Team photo removed successfully.";
+
+  // 1. If an avatarUrl exists, call backend destroy endpoint to remove from cloud storage
+  if (avatarUrl) {
+    try {
+      const res = await fetch("/api/admin/remove-photo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, avatarUrl }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        cloudDeleted = !!data.cloudDeleted;
+        if (data.message) message = data.message;
+      }
+    } catch (err) {
+      console.warn("Could not call /api/admin/remove-photo:", err);
+    }
+  }
+
+  // 2. Update local storage for immediate zero-latency UI update
+  const teams = getLocalTeams();
+  const target = teams.find((t) => t.id === teamId || t.teamId === teamId);
+  const updated = teams.map((t) => {
+    if (t.id === teamId || t.teamId === teamId) {
+      return {
+        ...t,
+        avatar: "",
+        profileLocked: false,
+        updatedAt: Date.now(),
+      };
+    }
+    return t;
+  });
+  saveLocalTeams(updated);
+
+  // 3. Persist update to Cloud Firestore
+  if (isFirebaseConfigured && db) {
+    try {
+      const actualDocId = target?.id || teamId;
+      const teamRef = doc(db, "teams", actualDocId);
+      await setDoc(
+        teamRef,
+        {
+          avatar: "",
+          profileLocked: false,
+          updatedAt: Date.now(),
+        },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("Firestore removeTeamPhoto error:", err);
+    }
+  }
+
+  return { success: true, cloudDeleted, message };
+}
+
 export async function setHackathonStatus(status: EventStatus, durationHours: number = 30) {
   const now = Date.now();
   const cur = getLocalConfig();

@@ -492,3 +492,67 @@
     0 25px 60px -10px rgba(0, 0, 0, 0.95);
 }
 
+/* =============================================
+   CASIO DIGITAL LCD WATCH THEMED STYLES
+   ============================================= */
+
+.casio-lcd-panel {
+  background: #070d0a;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(16, 185, 129, 0.15);
+  border-radius: 8px;
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.casio-lcd-amber {
+  background: #0e0c07;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.9),
+    0 0 14px rgba(245, 158, 11, 0.18);
+  border-radius: 8px;
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+@keyframes casioDigitFlicker {
+  0% { opacity: 0.9; text-shadow: 0 0 4px rgba(52, 211, 153, 0.6); }
+  50% { opacity: 1; text-shadow: 0 0 12px rgba(52, 211, 153, 1); }
+  100% { opacity: 0.93; text-shadow: 0 0 6px rgba(52, 211, 153, 0.7); }
+}
+
+.casio-flipping {
+  animation: casioDigitFlicker 0.06s infinite alternate;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+@keyframes casioLockGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+    transform: scale(0.95);
+  }
+  40% {
+    box-shadow: 0 0 28px rgba(52, 211, 153, 0.9), inset 0 0 12px rgba(52, 211, 153, 0.5);
+    transform: scale(1.08);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.25);
+    transform: scale(1);
+  }
+}
+
+.casio-locked-pulse {
+  animation: casioLockGlow 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Smooth Table Row Animation Support */
+tr.motion-row {
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+

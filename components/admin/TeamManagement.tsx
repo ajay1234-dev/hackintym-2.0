@@ -7,6 +7,7 @@ import {
   createTeam,
   updateTeam,
   deleteTeam,
+  removeTeamPhoto,
 } from "@/lib/firebase/firestore";
 
 interface TeamManagementProps {
@@ -22,6 +23,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isRemovingPhoto, setIsRemovingPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -150,6 +152,29 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
     }
   };
 
+  const handleRemovePhoto = async (team: Team) => {
+    if (!team.avatar) return;
+    const confirmed = window.confirm(
+      `Are you sure you want to remove the photo for "${team.teamName}"?\n\nThis will permanently delete the image from cloud storage and reset the team profile so they can upload a new photo if needed.`
+    );
+    if (!confirmed) return;
+
+    const teamKey = team.id || team.teamId;
+    setIsRemovingPhoto(teamKey);
+    try {
+      const res = await removeTeamPhoto(teamKey, team.avatar);
+      if (editingTeam && (editingTeam.id === teamKey || editingTeam.teamId === teamKey)) {
+        setEditingTeam({ ...editingTeam, avatar: "", profileLocked: false });
+      }
+      onNotification?.(res.message || `Photo removed for ${team.teamName}.`);
+    } catch (err: any) {
+      console.error(err);
+      onNotification?.("Failed to remove photo.");
+    } finally {
+      setIsRemovingPhoto(null);
+    }
+  };
+
   return (
     <div className="rounded-3xl cyber-card border border-slate-800 p-6 sm:p-7 shadow-2xl font-sans">
       
@@ -211,62 +236,110 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
         <>
           {/* Mobile Card View (Phone / Small Screens) */}
           <div className="sm:hidden space-y-3">
-            {filteredTeams.map((team) => (
-              <div
-                key={team.id || team.teamId}
-                className="p-4 rounded-2xl bg-slate-900/85 border border-slate-800 flex flex-col gap-3 shadow-md"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono-numbers font-black text-xs text-cyan-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                      {team.teamId}
-                    </span>
-                    <span className="text-xs font-mono-numbers font-bold text-slate-400">
-                      Rank #{team.rank || "—"}
-                    </span>
+            {filteredTeams.map((team) => {
+              const teamKey = team.id || team.teamId;
+              const isRemoving = isRemovingPhoto === teamKey;
+
+              return (
+                <div
+                  key={teamKey}
+                  className="p-4 rounded-2xl bg-slate-900/85 border border-slate-800 flex flex-col gap-3 shadow-md"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono-numbers font-black text-xs text-cyan-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                        {team.teamId}
+                      </span>
+                      <span className="text-xs font-mono-numbers font-bold text-slate-400">
+                        Rank #{team.rank || "—"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {team.avatar && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(team)}
+                          disabled={isRemoving}
+                          title="Delete photo from cloud storage"
+                          className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/15 border border-slate-800 hover:border-rose-500/40 text-rose-400 flex items-center justify-center shadow-sm disabled:opacity-50"
+                        >
+                          {isRemoving ? (
+                            <i className="bi bi-arrow-repeat animate-spin text-xs" />
+                          ) : (
+                            <i className="bi bi-camera-slash text-xs" />
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setEditingTeam(team)}
+                        title="Edit Team"
+                        className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center shadow-sm"
+                      >
+                        <i className="bi bi-pencil-square text-xs" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTeam(team)}
+                        title="Delete Team"
+                        className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-400 flex items-center justify-center shadow-sm"
+                      >
+                        <i className="bi bi-trash-fill text-xs" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setEditingTeam(team)}
-                      title="Edit Team"
-                      className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center shadow-sm"
-                    >
-                      <i className="bi bi-pencil-square text-xs" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTeam(team)}
-                      title="Delete Team"
-                      className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-400 flex items-center justify-center shadow-sm"
-                    >
-                      <i className="bi bi-trash-fill text-xs" />
-                    </button>
+                  <div className="flex items-start gap-3">
+                    {team.avatar ? (
+                      <div className="relative shrink-0">
+                        <img
+                          src={team.avatar}
+                          alt={team.teamName}
+                          className="w-11 h-11 rounded-xl object-cover border border-cyan-500/40 shadow-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(team)}
+                          disabled={isRemoving}
+                          title="Delete picture from cloud"
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-[9px] shadow"
+                        >
+                          {isRemoving ? (
+                            <i className="bi bi-arrow-repeat animate-spin" />
+                          ) : (
+                            <i className="bi bi-x-lg" />
+                          )}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-xs font-mono-numbers text-slate-400 shrink-0">
+                        {team.teamName.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-bold text-white text-base font-display truncate">
+                        {team.teamName}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 flex-wrap">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-[11px] text-slate-300">
+                          <i className="bi bi-tag-fill text-[9px] text-cyan-400" />
+                          {team.track || "General Track"}
+                        </span>
+                        <span className="text-[11px] text-slate-400">
+                          {team.members?.length || 0} members
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono-numbers">
+                    <span className="text-slate-400 font-sans text-[11px]">Total Score:</span>
+                    <span className="font-bold text-white text-sm">
+                      {team.score} <span className="text-slate-500 text-xs font-normal">({team.points} pts)</span>
+                    </span>
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="font-bold text-white text-base font-display">
-                    {team.teamName}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 flex-wrap">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-[11px] text-slate-300">
-                      <i className="bi bi-tag-fill text-[9px] text-cyan-400" />
-                      {team.track || "General Track"}
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      {team.members?.length || 0} members
-                    </span>
-                  </div>
-                </div>
-
-                <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono-numbers">
-                  <span className="text-slate-400 font-sans text-[11px]">Total Score:</span>
-                  <span className="font-bold text-white text-sm">
-                    {team.score} <span className="text-slate-500 text-xs font-normal">({team.points} pts)</span>
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Desktop Table View (Tablet & Up) */}
@@ -275,7 +348,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
               <thead className="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800 font-display">
                 <tr>
                   <th className="p-3.5 whitespace-nowrap">Rank / ID</th>
-                  <th className="p-3.5 whitespace-nowrap">Team Name</th>
+                  <th className="p-3.5 whitespace-nowrap">Team Name & Photo</th>
                   <th className="p-3.5 hidden sm:table-cell whitespace-nowrap">Track</th>
                   <th className="p-3.5 hidden md:table-cell whitespace-nowrap">Members</th>
                   <th className="p-3.5 text-right whitespace-nowrap">Score</th>
@@ -283,43 +356,100 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
-                {filteredTeams.map((team) => (
-                  <tr key={team.id || team.teamId} className="hover:bg-slate-800/50 transition-colors">
-                    <td className="p-3.5 font-mono-numbers font-bold text-slate-300 whitespace-nowrap">
-                      #{team.rank || "-"} • <span className="text-cyan-400">{team.teamId}</span>
-                    </td>
-                    <td className="p-3.5 font-bold text-white font-display text-sm whitespace-nowrap">
-                      {team.teamName}
-                    </td>
-                    <td className="p-3.5 text-slate-300 hidden sm:table-cell whitespace-nowrap">
-                      {team.track || "General"}
-                    </td>
-                    <td className="p-3.5 text-slate-400 hidden md:table-cell whitespace-nowrap">
-                      {team.members?.length || 0} members
-                    </td>
-                    <td className="p-3.5 text-right font-mono-numbers font-bold text-white whitespace-nowrap">
-                      {team.score} <span className="text-slate-500 font-normal">({team.points} pts)</span>
-                    </td>
-                    <td className="p-3.5 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => setEditingTeam(team)}
-                          title="Edit Team"
-                          className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center shadow-sm"
-                        >
-                          <i className="bi bi-pencil-square text-xs" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTeam(team)}
-                          title="Delete Team"
-                          className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-400 flex items-center justify-center shadow-sm"
-                        >
-                          <i className="bi bi-trash-fill text-xs" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredTeams.map((team) => {
+                  const teamKey = team.id || team.teamId;
+                  const isRemoving = isRemovingPhoto === teamKey;
+
+                  return (
+                    <tr key={teamKey} className="hover:bg-slate-800/50 transition-colors">
+                      <td className="p-3.5 font-mono-numbers font-bold text-slate-300 whitespace-nowrap">
+                        #{team.rank || "-"} • <span className="text-cyan-400">{team.teamId}</span>
+                      </td>
+                      <td className="p-3.5 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          {team.avatar ? (
+                            <div className="relative group shrink-0">
+                              <img
+                                src={team.avatar}
+                                alt={team.teamName}
+                                className="w-9 h-9 rounded-xl object-cover border border-cyan-500/50 shadow-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePhoto(team)}
+                                disabled={isRemoving}
+                                title="Delete picture from cloud storage"
+                                className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                              >
+                                {isRemoving ? (
+                                  <i className="bi bi-arrow-repeat animate-spin" />
+                                ) : (
+                                  <i className="bi bi-x-lg" />
+                                )}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-bold text-xs text-slate-400 font-mono-numbers shrink-0">
+                              {team.teamName.substring(0, 2).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <span className="font-bold text-white font-display text-sm block truncate max-w-[220px]">
+                              {team.teamName}
+                            </span>
+                            {team.tagline && (
+                              <span className="text-[11px] text-cyan-300/80 italic block truncate max-w-[220px]">
+                                "{team.tagline}"
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3.5 text-slate-300 hidden sm:table-cell whitespace-nowrap">
+                        {team.track || "General"}
+                      </td>
+                      <td className="p-3.5 text-slate-400 hidden md:table-cell whitespace-nowrap">
+                        {team.members?.length || 0} members
+                      </td>
+                      <td className="p-3.5 text-right font-mono-numbers font-bold text-white whitespace-nowrap">
+                        {team.score} <span className="text-slate-500 font-normal">({team.points} pts)</span>
+                      </td>
+                      <td className="p-3.5 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          {team.avatar && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePhoto(team)}
+                              disabled={isRemoving}
+                              title="Delete team photo from cloud storage & unlock profile"
+                              className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/15 border border-slate-800 hover:border-rose-500/50 text-rose-400 flex items-center justify-center shadow-sm disabled:opacity-50 transition-all"
+                            >
+                              {isRemoving ? (
+                                <i className="bi bi-arrow-repeat animate-spin text-xs" />
+                              ) : (
+                                <i className="bi bi-camera-slash text-xs" />
+                              )}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setEditingTeam(team)}
+                            title="Edit Team"
+                            className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white flex items-center justify-center shadow-sm"
+                          >
+                            <i className="bi bi-pencil-square text-xs" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTeam(team)}
+                            title="Delete Team"
+                            className="p-2 rounded-xl bg-slate-950 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/40 text-slate-400 hover:text-rose-400 flex items-center justify-center shadow-sm"
+                          >
+                            <i className="bi bi-trash-fill text-xs" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -552,6 +682,76 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                   <p className="text-[11px] text-amber-400/90 mt-1.5 font-sans flex items-center gap-1">
                     <span>👑 Note: The 1st member listed will be displayed as the <strong>Team Leader</strong> on the leaderboard card.</span>
                   </p>
+                </div>
+
+                {/* Team Photo & Cloud Storage Section */}
+                <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-300 font-display flex items-center gap-1.5">
+                      <i className="bi bi-image text-cyan-400" />
+                      Team Photo & Profile Picture
+                    </label>
+                    {editingTeam.avatar ? (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-mono-numbers">
+                        {editingTeam.profileLocked ? "Locked 🔒" : "Active"}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-950 px-2 py-0.5 rounded-full border border-slate-800">
+                        No Photo
+                      </span>
+                    )}
+                  </div>
+
+                  {editingTeam.avatar ? (
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={editingTeam.avatar}
+                        alt={editingTeam.teamName}
+                        className="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/50 shadow-md shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-white font-display">
+                          Photo Active on Leaderboard
+                        </p>
+                        {editingTeam.tagline && (
+                          <p className="text-[11px] text-cyan-300/90 italic truncate mt-0.5">
+                            "{editingTeam.tagline}"
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Removing will permanently delete this picture from cloud storage and unlock team upload.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(editingTeam)}
+                          disabled={isRemovingPhoto === (editingTeam.id || editingTeam.teamId)}
+                          className="mt-2.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 hover:text-rose-200 text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                        >
+                          {isRemovingPhoto === (editingTeam.id || editingTeam.teamId) ? (
+                            <>
+                              <i className="bi bi-arrow-repeat animate-spin text-xs" />
+                              <span>Deleting from cloud storage...</span>
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-trash3-fill text-xs" />
+                              <span>Remove Photo & Delete from Cloud</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-4 px-3 text-center rounded-xl bg-slate-950/60 border border-dashed border-slate-800">
+                      <p className="text-xs text-slate-400 font-sans">
+                        No custom photo uploaded yet for this team.
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 font-sans">
+                        Team members can select their team and upload a photo via the portal.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 

@@ -20,65 +20,78 @@ export const VintageScoreTicker: React.FC<VintageScoreTickerProps> = ({
   suffix = "",
   playSound = false,
 }) => {
-  const [displayValue, setDisplayValue] = useState<number>(value);
-  const [isRolling, setIsRolling] = useState<boolean>(false);
+  const [displayValue, setDisplayValue] = useState<string>(() => String(value));
+  const [isFlipping, setIsFlipping] = useState<boolean>(false);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
   const prevValueRef = useRef<number>(value);
-  const animFrameRef = useRef<number | null>(null);
+  const scrambleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lockTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const prev = prevValueRef.current;
     if (value === prev) return;
 
     prevValueRef.current = value;
-    setIsRolling(true);
+    setIsFlipping(true);
+    setIsLocked(false);
 
-    if (playSound) {
-      soundManager.playScoreUpdate();
-    }
+    if (scrambleIntervalRef.current) clearInterval(scrambleIntervalRef.current);
+    if (lockTimeoutRef.current) clearTimeout(lockTimeoutRef.current);
 
-    const startValue = displayValue;
-    const diff = value - startValue;
-    const duration = 750; // ms
-    const startTime = performance.now();
+    const digitCount = Math.max(3, String(value).length);
 
-    const animateRoll = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(1, elapsed / duration);
-
-      // Ease out expo for arcade mechanical feel
-      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      const current = Math.round(startValue + diff * ease);
-
-      setDisplayValue(current);
-
-      if (progress < 1) {
-        animFrameRef.current = requestAnimationFrame(animateRoll);
-      } else {
-        setDisplayValue(value);
-        setIsRolling(false);
+    // Rapid Casio random number flipping at high speed
+    scrambleIntervalRef.current = setInterval(() => {
+      let rand = "";
+      for (let i = 0; i < digitCount; i++) {
+        rand += Math.floor(Math.random() * 10).toString();
       }
-    };
+      setDisplayValue(rand);
 
-    animFrameRef.current = requestAnimationFrame(animateRoll);
+      if (playSound && Math.random() > 0.45) {
+        soundManager.playCasioScrambleTick();
+      }
+    }, 40);
+
+    // Lock in marks after suspenseful rapid flip cycle
+    lockTimeoutRef.current = setTimeout(() => {
+      if (scrambleIntervalRef.current) {
+        clearInterval(scrambleIntervalRef.current);
+        scrambleIntervalRef.current = null;
+      }
+      setDisplayValue(value.toLocaleString());
+      setIsFlipping(false);
+      setIsLocked(true);
+
+      if (playSound) {
+        soundManager.playCasioBeep();
+      }
+
+      setTimeout(() => setIsLocked(false), 700);
+    }, 750);
 
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (scrambleIntervalRef.current) clearInterval(scrambleIntervalRef.current);
+      if (lockTimeoutRef.current) clearTimeout(lockTimeoutRef.current);
     };
-  }, [value, displayValue, playSound]);
+  }, [value, playSound]);
 
   return (
     <span
-      className={`inline-flex items-baseline font-mono-numbers font-black tabular-nums transition-all ${
-        isRolling
-          ? "vintage-score-rolling scale-110 text-cyan-300"
+      className={`inline-flex items-baseline font-mono-numbers font-black tabular-nums transition-all select-none ${
+        isFlipping
+          ? "casio-flipping scale-110 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]"
+          : isLocked
+          ? "casio-locked-pulse text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.9)]"
           : isChampion
-          ? "vintage-score-champion text-amber-300"
-          : ""
+          ? "vintage-score-champion text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+          : "text-white"
       } ${className}`}
     >
       {prefix && <span className="text-[0.8em] opacity-80 mr-0.5">{prefix}</span>}
-      <span>{displayValue.toLocaleString()}</span>
+      <span>{displayValue}</span>
       {suffix && <span className="text-[0.8em] opacity-80 ml-0.5">{suffix}</span>}
     </span>
   );
 };
+

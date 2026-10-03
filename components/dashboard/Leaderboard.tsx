@@ -50,11 +50,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return teams.length > 0 ? Math.max(...teams.map((t) => t.score || 0)) : 1000;
   }, [teams]);
 
-  // Split into top 7 and rest of teams (strictly evaluated teams with score > 0 and rank <= 7 are in top 7)
-  const top7 = filteredTeams.filter(
-    (t) => (t.score || 0) > 0 && t.rank != null && t.rank <= 7
-  );
-  const rest = filteredTeams.filter((t) => !top7.includes(t));
+  const hasAnyScoredTeams = useMemo(() => {
+    return filteredTeams.some((t) => (t.score || 0) > 0 && t.rank != null);
+  }, [filteredTeams]);
 
   return (
     <section id="leaderboard" className="w-full">
@@ -114,142 +112,80 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* ═════════ TOP 7 SECTION ═════════ */}
-          {top7.length > 0 && (
-            <div>
-              {/* Top 7 Header Badge */}
-              <div className="flex items-center gap-2.5 px-1 mb-3">
-                <i className="bi bi-trophy-fill text-amber-400 text-sm" />
-                <span className="text-xs font-black uppercase tracking-widest text-amber-300 font-display">
-                  Top 7 Podium Rankings
-                </span>
-                <div className="flex-1 h-px bg-gradient-to-r from-amber-500/40 to-transparent" />
-              </div>
+        <div className="space-y-4">
+          {/* Status / Header Badge */}
+          <div className="flex items-center justify-between px-2 mb-1">
+            <div className="flex items-center gap-2.5">
+              {hasAnyScoredTeams ? (
+                <>
+                  <i className="bi bi-trophy-fill text-amber-400 text-sm" />
+                  <span className="text-xs font-black uppercase tracking-widest text-amber-300 font-display">
+                    Live Standings
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-sans hidden sm:inline">
+                    • Top 7 highlighted with podium styling • Live auto-reordering
+                  </span>
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-shield-check text-cyan-400 text-sm" />
+                  <span className="text-xs font-black uppercase tracking-widest text-slate-300 font-display">
+                    Registered Teams (Awaiting Review 1)
+                  </span>
+                  <span className="text-[11px] text-slate-500 font-sans hidden sm:inline">
+                    • Rankings will activate automatically after Review 1 scores are entered
+                  </span>
+                </>
+              )}
+            </div>
+            <span className="text-[11px] font-mono-numbers text-slate-500 font-medium">
+              {filteredTeams.length} {filteredTeams.length === 1 ? "team" : "teams"}
+            </span>
+          </div>
 
-              {/* Desktop Table View */}
-              <div
-                className="hidden md:block rounded-3xl overflow-hidden border border-amber-500/30 shadow-2xl shadow-amber-950/20"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(245,158,11,0.05) 0%, rgba(10,14,24,0.98) 100%)",
-                }}
-              >
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-amber-900/40 text-[11px] font-black uppercase tracking-wider text-amber-400 font-display bg-amber-500/5">
-                      <th className="py-4 px-4 text-center w-24">Rank</th>
-                      <th className="py-4 px-4">Team Name & Category</th>
-                      <th className="py-4 px-3 text-center w-24">Review 1</th>
-                      <th className="py-4 px-3 text-center w-24">Review 2</th>
-                      <th className="py-4 px-3 text-center w-24">Review 3</th>
-                      <th className="py-4 px-3 text-center w-28">Points</th>
-                      <th className="py-4 px-6 text-right w-40">Total Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-amber-900/20">
-                    <AnimatePresence initial={false}>
-                      {top7.map((team) => (
-                        <TeamRow
-                          key={team.id || team.teamId}
-                          team={team}
-                          maxScore={maxScore}
-                          isTop7Section={true}
-                          onSelectTeam={(t) => setSelectedTeam(t)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-2.5">
+          {/* Unified Desktop Table View */}
+          <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/85 shadow-2xl backdrop-blur-sm">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400 font-display bg-slate-900/80">
+                  <th className="py-4 px-4 text-center w-24">Rank</th>
+                  <th className="py-4 px-4">Team Name & Category</th>
+                  <th className="py-4 px-3 text-center w-24">Review 1</th>
+                  <th className="py-4 px-3 text-center w-24">Review 2</th>
+                  <th className="py-4 px-3 text-center w-24">Review 3</th>
+                  <th className="py-4 px-3 text-center w-28">Points</th>
+                  <th className="py-4 px-6 text-right w-40">Total Score</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/60">
                 <AnimatePresence initial={false}>
-                  {top7.map((team) => (
-                    <TeamCard
+                  {filteredTeams.map((team) => (
+                    <TeamRow
                       key={team.id || team.teamId}
                       team={team}
                       maxScore={maxScore}
+                      isTop7Section={(team.score || 0) > 0 && team.rank != null && team.rank <= 7}
                       onSelectTeam={(t) => setSelectedTeam(t)}
                     />
                   ))}
                 </AnimatePresence>
-              </div>
-            </div>
-          )}
+              </tbody>
+            </table>
+          </div>
 
-          {/* ═════════ OTHER TEAMS SECTION ═════════ */}
-          {rest.length > 0 && (
-            <div>
-              {/* Rest Section Separator */}
-              <div className="flex items-center gap-2.5 px-1 mb-3">
-                {top7.length === 0 ? (
-                  <>
-                    <i className="bi bi-shield-check text-cyan-400 text-sm" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-300 font-display">
-                      Registered Teams (Awaiting Review 1)
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-sans hidden sm:inline">
-                      • Rankings will activate automatically after Review 1 scores are entered
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-list-ol text-slate-500 text-sm" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-400 font-display">
-                      Participating Teams
-                    </span>
-                  </>
-                )}
-                <div className="flex-1 h-px bg-gradient-to-r from-slate-800 to-transparent" />
-              </div>
-
-              {/* Desktop Table View */}
-              <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800 bg-slate-950/80 shadow-xl">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400 font-display bg-slate-900/60">
-                      <th className="py-3.5 px-4 text-center w-24">Rank</th>
-                      <th className="py-3.5 px-4">Team Name & Category</th>
-                      <th className="py-3.5 px-3 text-center w-24">Review 1</th>
-                      <th className="py-3.5 px-3 text-center w-24">Review 2</th>
-                      <th className="py-3.5 px-3 text-center w-24">Review 3</th>
-                      <th className="py-3.5 px-3 text-center w-28">Points</th>
-                      <th className="py-3.5 px-6 text-right w-40">Total Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800/60">
-                    <AnimatePresence initial={false}>
-                      {rest.map((team) => (
-                        <TeamRow
-                          key={team.id || team.teamId}
-                          team={team}
-                          maxScore={maxScore}
-                          isTop7Section={false}
-                          onSelectTeam={(t) => setSelectedTeam(t)}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-2">
-                <AnimatePresence initial={false}>
-                  {rest.map((team) => (
-                    <TeamCard
-                      key={team.id || team.teamId}
-                      team={team}
-                      maxScore={maxScore}
-                      onSelectTeam={(t) => setSelectedTeam(t)}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
+          {/* Unified Mobile Card View */}
+          <div className="md:hidden space-y-2.5">
+            <AnimatePresence initial={false}>
+              {filteredTeams.map((team) => (
+                <TeamCard
+                  key={team.id || team.teamId}
+                  team={team}
+                  maxScore={maxScore}
+                  onSelectTeam={(t) => setSelectedTeam(t)}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 

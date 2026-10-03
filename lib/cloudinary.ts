@@ -95,3 +95,26 @@ function compressImageToDataUrl(
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Cloudinary Deletion Helper
+ * Calls server-side endpoint to destroy the image using signed API credentials.
+ */
+export async function deleteImageFromCloudinary(
+  avatarUrl: string,
+  teamId?: string
+): Promise<{ success: boolean; cloudDeleted: boolean; message: string }> {
+  try {
+    const res = await fetch("/api/admin/remove-photo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ teamId, avatarUrl }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    return { success: false, cloudDeleted: false, message: "Server returned non-200" };
+  } catch (err: any) {
+    return { success: false, cloudDeleted: false, message: err?.message || "Network error" };
+  }
+}
