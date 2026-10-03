@@ -190,7 +190,7 @@ export const AvengerProfileModal: React.FC<AvengerProfileModalProps> = ({
                 <span>HackinTym Performance Metrics</span>
               </h4>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+              <div className="grid grid-cols-3 gap-2.5 text-center">
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
                   <span className="text-[10px] uppercase font-bold text-slate-500 block font-display">
                     Review 1
@@ -215,15 +215,6 @@ export const AvengerProfileModal: React.FC<AvengerProfileModalProps> = ({
                   </span>
                   <span className="font-mono-numbers font-black text-sm text-emerald-400">
                     {team.review3Score || 0} pts
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-cyan-950/30 border border-cyan-500/30">
-                  <span className="text-[10px] uppercase font-bold text-cyan-400 block font-display">
-                    Bonus Points
-                  </span>
-                  <span className="font-mono-numbers font-black text-sm text-cyan-300">
-                    +{team.points} pts
                   </span>
                 </div>
               </div>

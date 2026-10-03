@@ -306,14 +306,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
         )}
       </td>
 
-      {/* 6. Individual Points Column */}
-      <td className="py-4 px-3 text-center whitespace-nowrap">
-        <span className="inline-block font-mono-numbers font-bold text-xs sm:text-sm text-cyan-300 bg-cyan-950/40 px-2.5 py-1 rounded-xl border border-cyan-500/30">
-          +{team.points} <span className="text-[10px] text-cyan-400/70">pts</span>
-        </span>
-      </td>
-
-      {/* 7. Total Score Column */}
+      {/* 6. Total Score Column */}
       <td className="py-4 px-5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-3">
           {isFlipping ? (

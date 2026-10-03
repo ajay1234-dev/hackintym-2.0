@@ -301,7 +301,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       <th className="py-4 px-3 text-center w-24">Review 1</th>
                       <th className="py-4 px-3 text-center w-24">Review 2</th>
                       <th className="py-4 px-3 text-center w-24">Review 3</th>
-                      <th className="py-4 px-3 text-center w-28">Points</th>
                       <th className="py-4 px-6 text-right w-44">Total Score</th>
                     </tr>
                   </thead>

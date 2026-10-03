@@ -163,8 +163,8 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
           </div>
         )}
 
-        {/* 4-Item Review & Points Score Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
+        {/* 3-Item Review Score Grid */}
+        <div className="grid grid-cols-3 gap-2.5 mb-6">
           <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-center">
             <span className="text-[10px] font-black uppercase tracking-wider text-sky-400 font-display block mb-1">
               Review 1
@@ -189,15 +189,6 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
             </span>
             <span className="text-2xl font-black font-mono-numbers text-white">
               {team.review3Score || 0}
-            </span>
-          </div>
-
-          <div className="p-3.5 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 text-center">
-            <span className="text-[10px] font-black uppercase tracking-wider text-cyan-400 font-display block mb-1">
-              Points
-            </span>
-            <span className="text-2xl font-black font-mono-numbers text-cyan-300">
-              +{team.points}
             </span>
           </div>
         </div>

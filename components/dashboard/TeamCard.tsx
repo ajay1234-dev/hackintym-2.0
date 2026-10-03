@@ -183,8 +183,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         </div>
       </div>
 
-      {/* Reviews & Points Grid */}
-      <div className="grid grid-cols-4 gap-1.5 pt-2.5 border-t border-slate-800/80 text-center">
+      {/* Reviews Grid */}
+      <div className="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-slate-800/80 text-center">
         <div className={`p-1.5 rounded-lg bg-slate-950/80 border ${
           isFlipping && publishingSession?.reviewNum === 1
             ? "border-rose-500/70 shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]"
@@ -249,15 +249,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({
               {team.review3Score || 0}
             </span>
           )}
-        </div>
-
-        <div className="p-1.5 rounded-lg bg-cyan-950/30 border border-cyan-500/20">
-          <span className="block text-[9px] font-bold uppercase text-cyan-400 font-display">
-            Points
-          </span>
-          <span className="font-mono-numbers font-bold text-xs text-cyan-300">
-            +{team.points}
-          </span>
         </div>
       </div>
 
