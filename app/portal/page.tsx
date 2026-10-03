@@ -174,8 +174,8 @@ export default function TeamPortalPage() {
             </div>
 
             {selectedTeam && (
-              <span className="text-xs font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1 rounded-xl font-mono-numbers animate-fadeIn">
-                Selected: {selectedTeam.teamId}
+              <span className="text-xs font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-500/40 px-3 py-1 rounded-xl font-display animate-fadeIn">
+                Selected: {selectedTeam.teamName}
               </span>
             )}
           </div>
@@ -207,8 +207,8 @@ export default function TeamPortalPage() {
                     <div>
                       {/* Top Bar of Card */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="font-mono-numbers font-black text-xs text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800">
-                          {team.teamId}
+                        <span className="text-[11px] font-bold text-slate-400 font-display truncate">
+                          {team.track || "General Track"}
                         </span>
 
                         {isSelected ? (
@@ -297,7 +297,7 @@ export default function TeamPortalPage() {
                     )}
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight mt-0.5">
-                    {selectedTeam.teamName} ({selectedTeam.teamId})
+                    {selectedTeam.teamName}
                   </h2>
                   {selectedLeader && (
                     <p className="text-xs text-amber-300 mt-1 flex items-center gap-1 font-sans">

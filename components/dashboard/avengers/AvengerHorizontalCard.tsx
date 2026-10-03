@@ -23,15 +23,14 @@ export const AvengerHorizontalCard: React.FC<AvengerHorizontalCardProps> = ({
 
   return (
     <motion.div
-      layout
-      layoutId={`avenger-card-${teamKey}`}
+      layout="position"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ layout: { type: "spring", stiffness: 340, damping: 28 } }}
       onClick={() => onSelectTeam(team)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative rounded-2xl p-4 sm:p-5 border transition-all duration-300 cursor-pointer select-none overflow-hidden backdrop-blur-xl shadow-lg hover:shadow-xl"
+      className="group relative rounded-2xl p-4 sm:p-5 border transition-all duration-300 cursor-pointer select-none overflow-hidden transform-gpu shadow-lg hover:shadow-xl"
       style={{
         background: avenger.colors.bgGradient,
         borderColor: isHovered ? avenger.colors.borderHover : avenger.colors.border,

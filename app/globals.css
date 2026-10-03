@@ -533,6 +533,43 @@
   letter-spacing: 0.06em;
 }
 
+/* Mixed Blue & Red Cybernetic Flipping */
+@keyframes casioBlueRedFlicker {
+  0% {
+    color: #38bdf8;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.95), 0 0 20px rgba(244, 63, 94, 0.7);
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+  }
+  50% {
+    color: #ffffff;
+    text-shadow: 0 0 14px rgba(244, 63, 94, 1), 0 0 24px rgba(56, 189, 248, 0.9);
+    filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.9));
+  }
+  100% {
+    color: #f43f5e;
+    text-shadow: 0 0 12px rgba(244, 63, 94, 0.95), 0 0 22px rgba(56, 189, 248, 0.8);
+    filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.85));
+  }
+}
+
+.casio-flipping-bluered {
+  animation: casioBlueRedFlicker 0.07s infinite alternate;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+}
+
+.casio-lcd-bluered {
+  background: #090a14;
+  border: 1.5px solid rgba(244, 63, 94, 0.6);
+  box-shadow: 
+    inset 0 2px 6px rgba(0, 0, 0, 0.9),
+    0 0 16px rgba(56, 189, 248, 0.35),
+    0 0 8px rgba(244, 63, 94, 0.35);
+  border-radius: 10px;
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+}
+
 @keyframes casioLockGlow {
   0% {
     box-shadow: 0 0 0 rgba(52, 211, 153, 0);

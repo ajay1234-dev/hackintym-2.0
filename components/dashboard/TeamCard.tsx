@@ -59,9 +59,9 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   const getRankBadge = () => {
     if (isFlipping) {
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-300 font-mono-numbers font-bold text-xs flex items-center gap-1.5 animate-pulse">
-          <i className="bi bi-arrow-repeat animate-spin text-xs" />
-          <span>EVALUATING</span>
+        <span className="px-2.5 py-1 rounded-xl bg-rose-500/10 border border-rose-500/40 text-cyan-300 font-mono-numbers font-bold text-xs flex items-center gap-1.5 animate-pulse shadow-[0_0_12px_rgba(56,189,248,0.3)]">
+          <i className="bi bi-arrow-repeat animate-spin text-xs text-rose-400" />
+          <span className="tracking-wider">EVALUATING</span>
         </span>
       );
     }
@@ -97,17 +97,16 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   return (
     <motion.div
       id={`team-card-${teamKey}`}
-      layout
-      layoutId={`card-${teamKey}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      layout="position"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{
         layout: { type: "spring", stiffness: 350, damping: 28 },
-        opacity: { duration: 0.2 },
+        opacity: { duration: 0.15 },
       }}
       onClick={() => onSelectTeam(team)}
-      className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.99] ${
+      className={`p-4 rounded-2xl border cursor-pointer select-none touch-manipulation shadow-md active:scale-[0.98] ${
         highlight || isActiveTarget
           ? "bg-amber-500/15 border-amber-400/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.01]"
           : isFlipping
@@ -123,24 +122,21 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           : "bg-slate-950/90 border-slate-800/80 hover:border-slate-700"
       }`}
     >
-      {/* Top Header: Rank, ID, and Total Score */}
+      {/* Top Header: Rank and Total Score */}
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           {getRankBadge()}
-          <span className="text-[11px] font-bold text-cyan-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800 font-mono-numbers">
-            {team.teamId}
-          </span>
         </div>
 
         <div className="text-right">
           {isFlipping ? (
-            <div className="px-2.5 py-1 rounded-xl bg-slate-950 border border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] flex items-center justify-center">
+            <div className="px-3 py-1 rounded-xl bg-slate-950 border-2 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.5),0_0_12px_rgba(56,189,248,0.5)] flex items-center justify-center">
               <CasioScoreScrambler
                 value={team.score}
                 isScrambling={true}
                 minDigits={2}
                 playSound={isActiveTarget}
-                className="text-2xl font-black font-mono-numbers text-amber-300 leading-none"
+                className="text-2xl font-black font-mono-numbers text-cyan-300 leading-none tracking-widest"
               />
             </div>
           ) : (
@@ -189,7 +185,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
       {/* Reviews & Points Grid */}
       <div className="grid grid-cols-4 gap-1.5 pt-2.5 border-t border-slate-800/80 text-center">
-        <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800">
+        <div className={`p-1.5 rounded-lg bg-slate-950/80 border ${
+          isFlipping && publishingSession?.reviewNum === 1
+            ? "border-rose-500/70 shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]"
+            : "border-slate-800"
+        }`}>
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R1
           </span>
@@ -198,7 +198,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           ) : (
             <span className="font-mono-numbers font-bold text-xs text-sky-400">
@@ -207,7 +207,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           )}
         </div>
 
-        <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800">
+        <div className={`p-1.5 rounded-lg bg-slate-950/80 border ${
+          isFlipping && publishingSession?.reviewNum === 2
+            ? "border-rose-500/70 shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]"
+            : "border-slate-800"
+        }`}>
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R2
           </span>
@@ -216,7 +220,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           ) : (
             <span className="font-mono-numbers font-bold text-xs text-violet-400">
@@ -225,7 +229,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           )}
         </div>
 
-        <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800">
+        <div className={`p-1.5 rounded-lg bg-slate-950/80 border ${
+          isFlipping && publishingSession?.reviewNum === 3
+            ? "border-rose-500/70 shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]"
+            : "border-slate-800"
+        }`}>
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R3
           </span>
@@ -234,7 +242,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           ) : (
             <span className="font-mono-numbers font-bold text-xs text-emerald-400">

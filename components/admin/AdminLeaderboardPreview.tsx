@@ -103,8 +103,8 @@ export const AdminLeaderboardPreview: React.FC<AdminLeaderboardPreviewProps> = (
                         )}
                         <div>
                           <p className="font-bold text-white font-display text-xs">{team.teamName}</p>
-                          <p className="text-[10px] text-slate-500 font-mono-numbers mt-0.5">
-                            {team.teamId} · {team.track || "General"}
+                          <p className="text-[10px] text-slate-500 font-sans mt-0.5">
+                            {team.track || "General"}
                           </p>
                         </div>
                       </div>

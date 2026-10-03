@@ -88,15 +88,14 @@ const PodiumCard: React.FC<PodiumCardProps> = ({
 
   return (
     <motion.div
-      layout
-      layoutId={`avenger-card-${teamKey}`}
+      layout="position"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ layout: { type: "spring", stiffness: 320, damping: 26 } }}
       onClick={onSelect}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`group relative rounded-3xl cursor-pointer select-none transition-all duration-300 border overflow-hidden backdrop-blur-xl ${
+      className={`group relative rounded-3xl cursor-pointer select-none transition-all duration-300 border overflow-hidden transform-gpu ${
         isCenterRank1
           ? "p-6 sm:p-7 shadow-[0_25px_60px_-10px_rgba(245,158,11,0.25)] hover:shadow-[0_30px_70px_rgba(251,191,36,0.4)]"
           : "p-5 sm:p-6 shadow-[0_20px_45px_rgba(0,0,0,0.6)] hover:shadow-[0_25px_55px_rgba(0,0,0,0.8)]"
@@ -188,9 +187,6 @@ const PodiumCard: React.FC<PodiumCardProps> = ({
           {team.teamName}
         </h4>
         <div className="flex items-center gap-2 mt-1 text-xs text-slate-400 font-sans">
-          <span className="text-[10px] font-mono-numbers px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-cyan-400">
-            {team.teamId}
-          </span>
           <span className="truncate">{team.track || "General Track"}</span>
         </div>
       </div>

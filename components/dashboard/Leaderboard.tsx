@@ -15,7 +15,7 @@ interface LeaderboardProps {
   isLoading?: boolean;
 }
 
-type ViewMode = "ALL" | "AVENGERS" | "TABLE";
+type ViewMode = "TABLE" | "AVENGERS";
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({
   teams,
@@ -24,7 +24,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   const [selectedTrack, setSelectedTrack] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const [config, setConfig] = useState<HackathonConfig | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("ALL");
+  const [viewMode, setViewMode] = useState<ViewMode>("TABLE");
 
   // Subscribe to realtime config for live publishing session sync across all screens
   useEffect(() => {
@@ -57,9 +57,65 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
   }, [teams]);
 
   const filteredTeams = useMemo(() => {
-    if (selectedTrack === "ALL") return teams;
-    return teams.filter((t) => t.track && t.track.trim() === selectedTrack);
-  }, [teams, selectedTrack]);
+    // 1. Filter by category/track if selected
+    const trackFiltered =
+      selectedTrack === "ALL"
+        ? teams
+        : teams.filter((t) => t.track && t.track.trim() === selectedTrack);
+
+    // 2. Sequential scoring ceremony active:
+    // Teams reveal from least score to Rank 1.
+    // - The least team goes directly to the bottom space!
+    // - As next least reveals, it slots in directly above it at the bottom.
+    // - Unrevealed teams stay pushed UP at the top, rapidly flipping numbers in mixed blue and red.
+    if (isPublishingActive && publishingSession?.sequence && publishingSession.sequence.length > 0) {
+      const sequence = publishingSession.sequence;
+      const lockedIds = new Set(publishingSession.lockedTeamIds || []);
+
+      const teamsWithPublishingState = trackFiltered.map((t) => {
+        const teamKey = t.id || t.teamId;
+        const seqIdx = sequence.findIndex(
+          (id) => id === teamKey || id === t.id || id === t.teamId
+        );
+        // sequence is ordered [least, 2nd least, ..., rank 1]
+        // So seqIdx === sequence.length - 1 -> Rank 1; seqIdx === 0 -> Rank N (least)
+        const projectedRank = seqIdx >= 0 ? sequence.length - seqIdx : 9999;
+        const isLocked = lockedIds.has(teamKey) || lockedIds.has(t.id) || lockedIds.has(t.teamId);
+
+        return {
+          team: {
+            ...t,
+            // While flipping, rank is undefined so it renders "EVALUATING"
+            // When locked, rank is locked to its verified projectedRank
+            rank: isLocked ? projectedRank : undefined,
+          },
+          isLocked,
+          projectedRank,
+        };
+      });
+
+      // Split into unlocked (still flipping at the top) and locked (revealed at the bottom)
+      const unlocked = teamsWithPublishingState
+        .filter((item) => !item.isLocked)
+        .sort((a, b) => a.projectedRank - b.projectedRank);
+
+      const locked = teamsWithPublishingState
+        .filter((item) => item.isLocked)
+        .sort((a, b) => a.projectedRank - b.projectedRank);
+
+      const others = teamsWithPublishingState.filter((item) => item.projectedRank === 9999);
+
+      // Still-flipping teams stay pushed UP at the top (Rows 1 to N-k).
+      // Locked teams slot in at the bottom: least team at the very bottom space!
+      return [
+        ...unlocked.map((x) => x.team),
+        ...locked.map((x) => x.team),
+        ...others.map((x) => x.team),
+      ];
+    }
+
+    return trackFiltered;
+  }, [teams, selectedTrack, isPublishingActive, publishingSession]);
 
   const maxScore = useMemo(() => {
     return teams.length > 0 ? Math.max(...teams.map((t) => t.score || 0)) : 1000;
@@ -105,50 +161,40 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         )}
 
         <div className="flex items-center gap-2.5">
-          {/* View Mode Toggle (when teams are evaluated) */}
+          {/* View Mode Toggle: Clean Standings vs Top 7 Avengers */}
           {hasAnyScoredTeams && (
             <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800 text-xs font-display">
               <button
                 type="button"
-                onClick={() => setViewMode("ALL")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                  viewMode === "ALL"
-                    ? "bg-gradient-to-r from-rose-500/20 to-cyan-500/20 text-white border border-cyan-500/40 shadow-sm"
+                onClick={() => setViewMode("TABLE")}
+                className={`px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
+                  viewMode === "TABLE"
+                    ? "bg-slate-800 text-cyan-300 border border-cyan-500/40 shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                All Views
+                <i className="bi bi-trophy-fill text-xs text-amber-400" />
+                <span>Standings</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("AVENGERS")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all flex items-center gap-1 ${
+                className={`px-3.5 py-1.5 rounded-lg font-bold transition-all flex items-center gap-1.5 ${
                   viewMode === "AVENGERS"
                     ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm"
                     : "text-slate-400 hover:text-amber-300"
                 }`}
               >
-                <i className="bi bi-shield-fill text-[11px]" />
+                <i className="bi bi-shield-fill text-xs text-rose-400" />
                 <span>Top 7 Avengers</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("TABLE")}
-                className={`px-3 py-1 rounded-lg font-bold transition-all ${
-                  viewMode === "TABLE"
-                    ? "bg-slate-800 text-white border border-slate-700 shadow-sm"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                Full Table
               </button>
             </div>
           )}
 
-          {/* Live sync status pill */}
+          {/* Live status pill */}
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-[11px] text-slate-400 font-mono-numbers">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>REALTIME SYNC</span>
+            <span>LIVE STANDINGS</span>
           </div>
         </div>
       </div>
@@ -201,9 +247,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
       ) : (
         <div className="space-y-8">
           {/* ═══════════════════════════════════════════════════════════════
-              1. THE TOP 7 AVENGERS OF HACKINTYM (Cinematic Hero Presentation)
+              1. DEDICATED TOP 7 AVENGERS SHOWCASE (Separate View)
              ═══════════════════════════════════════════════════════════════ */}
-          {hasAnyScoredTeams && (viewMode === "ALL" || viewMode === "AVENGERS") && (
+          {hasAnyScoredTeams && viewMode === "AVENGERS" && !isPublishingActive && (
             <Top7Avengers
               teams={filteredTeams}
               onSelectTeam={(t) => setSelectedTeam(t)}
@@ -211,9 +257,9 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           )}
 
           {/* ═══════════════════════════════════════════════════════════════
-              2. FULL LEADERBOARD TABLE / CARDS (All Teams Standings)
+              2. FULL LEADERBOARD TABLE / CARDS (Main Standings Board)
              ═══════════════════════════════════════════════════════════════ */}
-          {(viewMode === "ALL" || viewMode === "TABLE" || !hasAnyScoredTeams) && (
+          {(viewMode === "TABLE" || isPublishingActive || !hasAnyScoredTeams) && (
             <div className="space-y-4">
               {/* Header Separator */}
               <div className="flex items-center justify-between px-2">
@@ -225,7 +271,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         Complete Leaderboard Standings
                       </span>
                       <span className="text-[11px] text-slate-400 font-sans hidden sm:inline">
-                        • Top 7 marked with dynamic Avenger identities • 60fps auto-reordering
+                        • Official Hackathon Standings
                       </span>
                     </>
                   ) : (
@@ -235,7 +281,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                         Registered Teams (Awaiting Review 1)
                       </span>
                       <span className="text-[11px] text-slate-500 font-sans hidden sm:inline">
-                        • Top 7 Avengers will assemble once Review 1 scores are published
+                        • Official standings will activate once review scores are published
                       </span>
                     </>
                   )}
@@ -245,8 +291,8 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 </span>
               </div>
 
-              {/* Unified Desktop Table View */}
-              <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/90 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
+              {/* Unified Desktop Table View — Hardware accelerated, zero-lag scrolling */}
+              <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950 shadow-2xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400 font-display bg-slate-900/80">
@@ -295,19 +341,16 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         </div>
       )}
 
-      {/* ─── MODAL ROUTING: Top 7 Avenger Profile vs Standard Team Details ─── */}
-      {isTop7Selected ? (
-        <AvengerProfileModal
-          team={activeSelectedTeam}
-          onClose={() => setSelectedTeam(null)}
-        />
-      ) : (
-        <TeamDetailsModal
-          team={activeSelectedTeam}
-          topScore={maxScore}
-          onClose={() => setSelectedTeam(null)}
-        />
-      )}
+      {/* ─── ULTRA-SMOOTH HARDWARE-ACCELERATED TEAM DETAILS MODAL ─── */}
+      <AnimatePresence>
+        {activeSelectedTeam && (
+          <TeamDetailsModal
+            team={activeSelectedTeam}
+            topScore={maxScore}
+            onClose={() => setSelectedTeam(null)}
+          />
+        )}
+      </AnimatePresence>
     </section>
   );
 };

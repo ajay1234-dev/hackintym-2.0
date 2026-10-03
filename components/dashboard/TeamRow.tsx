@@ -62,9 +62,9 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       return (
         <span
           title="Flipping & evaluating marks..."
-          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-400/60 text-amber-300 font-mono-numbers text-xs font-bold animate-pulse"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/60 text-cyan-300 font-mono-numbers text-xs font-bold animate-pulse shadow-[0_0_12px_rgba(56,189,248,0.4)]"
         >
-          <i className="bi bi-arrow-repeat animate-spin text-xs" />
+          <i className="bi bi-arrow-repeat animate-spin text-xs text-rose-400" />
         </span>
       );
     }
@@ -131,7 +131,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   // Row styling
   const rowClass = highlight || isActiveTarget
-    ? "bg-amber-500/15 border-amber-400/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.003] z-20"
+    ? "bg-rose-500/15 border-rose-400/90 shadow-[0_0_25px_rgba(244,63,94,0.35),0_0_15px_rgba(56,189,248,0.25)] scale-[1.003] z-20"
     : isFlipping
     ? "bg-slate-900/40 border-slate-800/80 opacity-90"
     : isTop7Section && rank && hasScore && rank <= 7
@@ -147,17 +147,16 @@ export const TeamRow: React.FC<TeamRowProps> = ({
   return (
     <motion.tr
       id={`team-row-${teamKey}`}
-      layout
-      layoutId={teamKey}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      layout="position"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{
         layout: { type: "spring", stiffness: 350, damping: 28 },
-        opacity: { duration: 0.2 },
+        opacity: { duration: 0.15 },
       }}
       onClick={() => onSelectTeam(team)}
-      className={`motion-row group cursor-pointer transition-all duration-200 border-b border-slate-800/60 ${rowClass}`}
+      className={`group cursor-pointer select-none border-b border-slate-800/60 ${rowClass}`}
       title="Click to view full team card and members"
     >
       {/* 1. Rank Column */}
@@ -214,9 +213,6 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               >
                 {team.teamName}
               </span>
-              <span className="text-[10px] font-bold text-cyan-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 font-mono-numbers">
-                {team.teamId}
-              </span>
               {avenger && hasScore && (
                 <span
                   className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border font-display flex items-center gap-1.5 shadow-sm"
@@ -247,12 +243,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 3. Review 1 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 1 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
             <CasioScoreScrambler
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           </div>
         ) : (
@@ -271,12 +267,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 4. Review 2 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 2 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
             <CasioScoreScrambler
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           </div>
         ) : (
@@ -295,12 +291,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 5. Review 3 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 3 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
             <CasioScoreScrambler
               value={sessionScores[teamKey] || 0}
               isScrambling={true}
               minDigits={2}
-              className="text-xs text-amber-300 font-mono-numbers"
+              className="text-xs font-mono-numbers"
             />
           </div>
         ) : (
@@ -327,13 +323,13 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       <td className="py-4 px-5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-3">
           {isFlipping ? (
-            <div className="px-3 py-1.5 rounded-xl bg-slate-950 border-2 border-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] flex items-center justify-center">
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-950 border-2 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.5),0_0_12px_rgba(56,189,248,0.5)] flex items-center justify-center">
               <CasioScoreScrambler
                 value={team.score}
                 isScrambling={true}
                 minDigits={2}
                 playSound={isActiveTarget}
-                className="text-2xl sm:text-3xl text-amber-300 font-black font-mono-numbers tracking-widest"
+                className="text-2xl sm:text-3xl font-black font-mono-numbers tracking-widest"
               />
             </div>
           ) : (

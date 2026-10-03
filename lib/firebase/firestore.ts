@@ -255,6 +255,7 @@ export function subscribeToHackathonConfig(
               pausedRemainingMs: data.pausedRemainingMs != null ? Number(data.pausedRemainingMs) : null,
               updatedAt: data.updatedAt || Date.now(),
               publishingSession: (data.publishingSession as PublishingSession) || null,
+              cinematicIntroTriggeredAt: data.cinematicIntroTriggeredAt || null,
             };
             saveLocalConfig(configObj);
             callback(configObj);
@@ -775,3 +776,27 @@ export async function updateCustomTimer(options: {
 
   return updatedConfig;
 }
+
+export async function triggerCinematicIntroBroadcast(): Promise<void> {
+  const now = Date.now();
+  const cur = getLocalConfig();
+  const updatedConfig: HackathonConfig = {
+    ...cur,
+    cinematicIntroTriggeredAt: now,
+    updatedAt: now,
+  };
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(
+        doc(db, "hackathon", "config"),
+        { cinematicIntroTriggeredAt: now, updatedAt: now },
+        { merge: true }
+      );
+    } catch (err) {
+      console.error("Firestore triggerCinematicIntroBroadcast error:", err);
+    }
+  }
+}
+

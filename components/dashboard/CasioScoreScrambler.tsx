@@ -86,19 +86,19 @@ export const CasioScoreScrambler: React.FC<CasioScoreScramblerProps> = ({
     <span
       className={`inline-flex items-center font-mono-numbers tracking-widest font-black tabular-nums transition-all select-none ${
         isScrambling
-          ? "casio-flipping text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)] scale-105"
+          ? "casio-flipping-bluered scale-105"
           : justLocked
-          ? "casio-locked-pulse text-amber-300 drop-shadow-[0_0_12px_rgba(251,191,36,0.9)]"
+          ? "casio-locked-pulse text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]"
           : isChampion
           ? "text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]"
-          : "text-emerald-400"
+          : "text-slate-100"
       } ${className}`}
     >
       {prefix && <span className="text-[0.75em] opacity-75 mr-1">{prefix}</span>}
       <span className="relative">
-        {/* Faint LCD Ghost Segments (like classic Casio watches) */}
+        {/* Faint LCD Ghost Segments */}
         <span
-          className="absolute inset-0 opacity-10 text-emerald-700 pointer-events-none"
+          className="absolute inset-0 opacity-10 text-cyan-700 pointer-events-none"
           aria-hidden="true"
         >
           {"8".repeat(displayedText.length)}

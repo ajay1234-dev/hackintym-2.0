@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { motion } from "framer-motion";
 import { Team } from "@/types";
 
 interface TeamDetailsModalProps {
@@ -81,9 +82,19 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
   const regularMembers = team.members && team.members.length > 1 ? team.members.slice(1) : [];
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm"
+    >
       {/* Modal Box */}
-      <div className="relative w-full max-w-xl rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] p-6 sm:p-8 overflow-hidden max-h-[92vh] overflow-y-auto">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        transition={{ duration: 0.18, ease: "easeOut" }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-xl rounded-3xl bg-slate-950 border border-slate-800 shadow-2xl p-6 sm:p-8 overflow-hidden max-h-[90vh] overflow-y-auto overscroll-contain transform-gpu"
+      >
         {/* Ambient Top Glow */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -97,16 +108,12 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
           <i className="bi bi-x-lg text-sm" />
         </button>
 
-        {/* Header Tags: Rank, Team ID, and Category */}
+        {/* Header Tags: Rank and Category */}
         <div className="flex items-center gap-2.5 flex-wrap mb-4 pr-10">
           <span
             className={`px-3.5 py-1.5 rounded-xl font-mono-numbers font-black text-xs border flex items-center gap-1.5 ${rankStyle}`}
           >
             {rankTitle}
-          </span>
-
-          <span className="text-xs font-black text-slate-300 bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-800 font-mono-numbers">
-            ID: {team.teamId}
           </span>
 
           <span className="text-xs font-bold text-cyan-300 bg-cyan-500/10 px-3 py-1.5 rounded-xl border border-cyan-500/30 flex items-center gap-1.5 font-sans">
@@ -301,7 +308,7 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
             Close Card
           </button>
         </div>
-      </div>
+      </motion.div>
     </div>,
     document.body
   );

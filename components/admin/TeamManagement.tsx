@@ -140,7 +140,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
   };
 
   const handleDeleteTeam = async (team: Team) => {
-    if (!confirm(`Are you sure you want to delete "${team.teamName}" (${team.teamId})?`)) {
+    if (!confirm(`Are you sure you want to delete team "${team.teamName}"?`)) {
       return;
     }
     try {
@@ -247,10 +247,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono-numbers font-black text-xs text-cyan-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
-                        {team.teamId}
-                      </span>
-                      <span className="text-xs font-mono-numbers font-bold text-slate-400">
+                      <span className="text-xs font-mono-numbers font-bold text-slate-300 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
                         Rank #{team.rank || "—"}
                       </span>
                     </div>
@@ -347,7 +344,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead className="bg-slate-950 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800 font-display">
                 <tr>
-                  <th className="p-3.5 whitespace-nowrap">Rank / ID</th>
+                  <th className="p-3.5 whitespace-nowrap">Rank</th>
                   <th className="p-3.5 whitespace-nowrap">Team Name & Photo</th>
                   <th className="p-3.5 hidden sm:table-cell whitespace-nowrap">Track</th>
                   <th className="p-3.5 hidden md:table-cell whitespace-nowrap">Members</th>
@@ -363,7 +360,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                   return (
                     <tr key={teamKey} className="hover:bg-slate-800/50 transition-colors">
                       <td className="p-3.5 font-mono-numbers font-bold text-slate-300 whitespace-nowrap">
-                        #{team.rank || "-"} • <span className="text-cyan-400">{team.teamId}</span>
+                        #{team.rank || "-"}
                       </td>
                       <td className="p-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-3">
@@ -617,7 +614,7 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
                   <h4 className="text-base sm:text-lg font-black text-white uppercase tracking-wide">
                     Edit Team: {editingTeam.teamName}
                   </h4>
-                  <p className="text-[11px] text-slate-400">{editingTeam.teamId} • Update details</p>
+                  <p className="text-[11px] text-slate-400">Update team details and scores</p>
                 </div>
               </div>
               <button

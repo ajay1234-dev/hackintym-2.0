@@ -342,8 +342,8 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
                     {/* Team info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-white truncate font-display">{team.teamName}</p>
-                      <p className="text-[10px] text-slate-500 font-mono-numbers">
-                        {team.teamId} · Current R{activeReview}: {hasExisting ? (
+                      <p className="text-[10px] text-slate-500 font-sans">
+                        Current R{activeReview}: {hasExisting ? (
                           <span className="text-amber-400 font-bold">{existingVal}</span>
                         ) : (
                           <span className="text-slate-600">not set</span>
@@ -410,7 +410,7 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
                 {/* Current team banner */}
                 <div className="flex items-center justify-between text-xs text-slate-300 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 mb-3">
                   <span className="truncate">
-                    Current: <strong className="text-white">{currentTeamBeingRevealed?.team.teamName}</strong> ({currentTeamBeingRevealed?.teamId})
+                    Current: <strong className="text-white">{currentTeamBeingRevealed?.team.teamName}</strong>
                   </span>
                   <span className="font-mono-numbers text-amber-400 font-bold shrink-0 ml-2">
                     Score: {currentTeamBeingRevealed?.reviewVal} pts

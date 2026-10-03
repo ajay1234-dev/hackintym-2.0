@@ -45,6 +45,7 @@ export interface HackathonConfig {
   pausedRemainingMs?: number | null;
   updatedAt: number;
   publishingSession?: PublishingSession | null;
+  cinematicIntroTriggeredAt?: number | null;
 }
 
 export interface AdminUser {

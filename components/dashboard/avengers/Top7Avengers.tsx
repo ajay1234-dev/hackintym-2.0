@@ -5,7 +5,6 @@ import { Team } from "@/types";
 import { AvengerPodium } from "./AvengerPodium";
 import { AvengerHorizontalCard } from "./AvengerHorizontalCard";
 import { AvengerProfileModal } from "./AvengerProfileModal";
-import { AvengerCinematicIntro } from "./AvengerCinematicIntro";
 
 interface Top7AvengersProps {
   teams: Team[];
@@ -17,7 +16,6 @@ export const Top7Avengers: React.FC<Top7AvengersProps> = ({
   onSelectTeam,
 }) => {
   const [selectedHeroTeam, setSelectedHeroTeam] = useState<Team | null>(null);
-  const [isIntroOpen, setIsIntroOpen] = useState(false);
 
   // Extract Top 7 evaluated teams (score > 0 and rank <= 7)
   const top7Teams = teams.filter(
@@ -60,19 +58,6 @@ export const Top7Avengers: React.FC<Top7AvengersProps> = ({
             &quot;Seven teams. Seven identities. One battlefield.&quot;
           </p>
         </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2.5 relative z-10 shrink-0">
-          <button
-            type="button"
-            onClick={() => setIsIntroOpen(true)}
-            className="px-3.5 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-sm font-display"
-            title="Watch the cinematic opening sequence"
-          >
-            <i className="bi bi-play-circle-fill text-cyan-400" />
-            <span>Cinematic Intro</span>
-          </button>
-        </div>
       </div>
 
       {/* ─── 2. TOP 3 PODIUM (Iron Man #1, Captain America #2, Thor #3) ─── */}
@@ -105,12 +90,6 @@ export const Top7Avengers: React.FC<Top7AvengersProps> = ({
       <AvengerProfileModal
         team={selectedHeroTeam}
         onClose={() => setSelectedHeroTeam(null)}
-      />
-
-      {/* ─── 5. CINEMATIC INTRO OVERLAY ─── */}
-      <AvengerCinematicIntro
-        isOpen={isIntroOpen}
-        onFinish={() => setIsIntroOpen(false)}
       />
     </div>
   );

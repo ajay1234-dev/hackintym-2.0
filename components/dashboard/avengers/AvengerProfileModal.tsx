@@ -52,16 +52,16 @@ export const AvengerProfileModal: React.FC<AvengerProfileModalProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/85 backdrop-blur-2xl transition-opacity"
+          className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm transition-opacity"
         />
 
         {/* Modal Window */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 20 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="relative w-full max-w-2xl rounded-3xl border shadow-2xl overflow-hidden my-auto z-10 select-none font-sans"
+          exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: "spring", damping: 28, stiffness: 350 }}
+          className="relative w-full max-w-2xl rounded-3xl border shadow-2xl overflow-hidden my-auto z-10 select-none font-sans transform-gpu overscroll-contain"
           style={{
             background: "linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 14, 24, 0.99) 100%)",
             borderColor: avenger.colors.border,
@@ -154,10 +154,6 @@ export const AvengerProfileModal: React.FC<AvengerProfileModalProps> = ({
                   {team.teamName}
                 </h2>
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-300 font-sans">
-                  <span className="font-mono-numbers px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-cyan-400">
-                    {team.teamId}
-                  </span>
-                  <span>•</span>
                   <span>{team.track || "General Track"}</span>
                 </div>
               </div>

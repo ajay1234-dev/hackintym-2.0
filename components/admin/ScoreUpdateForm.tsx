@@ -120,7 +120,7 @@ export const ScoreUpdateForm: React.FC<ScoreUpdateFormProps> = ({
             <option value="">-- Choose a team from roster --</option>
             {teams.map((team) => (
               <option key={team.id || team.teamId} value={team.id || team.teamId}>
-                #{team.rank || "-"} {team.teamName} ({team.teamId}) — Current Score: {team.score}
+                #{team.rank || "-"} {team.teamName} — Current Score: {team.score}
               </option>
             ))}
           </select>

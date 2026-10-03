@@ -10,6 +10,7 @@ import { subscribeToAuth } from "@/lib/firebase/auth";
 import { Header } from "@/components/layout/Header";
 import { MiniCountdownTimer } from "@/components/dashboard/MiniCountdownTimer";
 import { Leaderboard } from "@/components/dashboard/Leaderboard";
+import { AvengerCinematicIntro } from "@/components/dashboard/avengers/AvengerCinematicIntro";
 import { INITIAL_HACKATHON_CONFIG, INITIAL_TEAMS } from "@/lib/firebase/mockData";
 
 export default function Home() {
@@ -17,6 +18,20 @@ export default function Home() {
   const [config, setConfig] = useState<HackathonConfig>(INITIAL_HACKATHON_CONFIG);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCinematicIntroActive, setIsCinematicIntroActive] = useState(false);
+  const lastTriggerTimeRef = React.useRef<number>(0);
+
+  // Listen for admin broadcasted cinematic assemble sequence
+  useEffect(() => {
+    if (config.cinematicIntroTriggeredAt) {
+      const triggerTime = config.cinematicIntroTriggeredAt;
+      const now = Date.now();
+      if (now - triggerTime < 20000 && triggerTime > lastTriggerTimeRef.current) {
+        lastTriggerTimeRef.current = triggerTime;
+        setIsCinematicIntroActive(true);
+      }
+    }
+  }, [config.cinematicIntroTriggeredAt]);
 
   useEffect(() => {
     const unsubTeams = subscribeToTeams((updatedTeams) => {
@@ -52,6 +67,12 @@ export default function Home() {
         </section>
       </main>
 
+      {/* Admin Broadcasted Fullscreen Cinematic Intro Overlay */}
+      <AvengerCinematicIntro
+        isOpen={isCinematicIntroActive}
+        onFinish={() => setIsCinematicIntroActive(false)}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-800/80 bg-slate-950/95 py-6 px-4 sm:px-8 mt-12">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
@@ -64,7 +85,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-2 font-mono-numbers text-slate-400">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Realtime Sync
+              Live Leaderboard
             </span>
           </div>
         </div>

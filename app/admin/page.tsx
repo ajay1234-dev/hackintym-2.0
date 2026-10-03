@@ -6,6 +6,7 @@ import { Team, HackathonConfig, AdminUser } from "@/types";
 import {
   subscribeToTeams,
   subscribeToHackathonConfig,
+  triggerCinematicIntroBroadcast,
 } from "@/lib/firebase/firestore";
 import { subscribeToAuth } from "@/lib/firebase/auth";
 import { AdminHeader } from "@/components/admin/AdminHeader";
@@ -23,6 +24,7 @@ export default function AdminPage() {
   const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
   const [config, setConfig] = useState<HackathonConfig>(INITIAL_HACKATHON_CONFIG);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isBroadcastingIntro, setIsBroadcastingIntro] = useState(false);
 
   // Authenticated state listener
   useEffect(() => {
@@ -108,6 +110,56 @@ export default function AdminPage() {
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             <span>AUTHORITATIVE STATE SYNC</span>
           </div>
+        </div>
+
+        {/* Live Scoreboard Cinematic Intro Broadcast Control */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-cyan-950/40 border border-slate-800 shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500/20 to-amber-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0 shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+              <i className="bi bi-broadcast-pin text-xl" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-white font-display flex items-center gap-2">
+                <span>Top 7 Avengers Ceremony Broadcast</span>
+                <span className="text-[10px] text-amber-300 font-normal border border-amber-400/40 px-2 py-0.5 rounded-full bg-amber-500/10">
+                  Live Screen Trigger
+                </span>
+              </h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Broadcast the full-screen Avengers Assemble opening ceremony to the live scoreboard
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            disabled={isBroadcastingIntro}
+            onClick={async () => {
+              setIsBroadcastingIntro(true);
+              try {
+                await triggerCinematicIntroBroadcast();
+                showNotification("Top 7 Avengers Cinematic Intro broadcasted to the live scoreboard!");
+              } catch (err) {
+                console.error(err);
+                showNotification("Could not trigger broadcast. Check console.");
+              } finally {
+                setTimeout(() => setIsBroadcastingIntro(false), 2500);
+              }
+            }}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-rose-500 to-amber-500 hover:brightness-110 active:scale-95 text-white font-black text-xs uppercase tracking-wider font-display shadow-lg shadow-rose-950/50 transition-all disabled:opacity-50 shrink-0"
+          >
+            {isBroadcastingIntro ? (
+              <>
+                <i className="bi bi-arrow-repeat animate-spin text-sm" />
+                <span>Broadcasting to Screen...</span>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-play-circle-fill text-sm" />
+                <span>Trigger Cinematic Intro</span>
+              </>
+            )}
+          </button>
         </div>
 
         {/* Top Controls: 30-Hour Timer Control Engine */}
