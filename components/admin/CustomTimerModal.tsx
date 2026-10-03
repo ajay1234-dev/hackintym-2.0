@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { HackathonConfig } from "@/types";
 import { updateCustomTimer } from "@/lib/firebase/firestore";
 import { formatTimeRemaining, soundManager } from "@/lib/utils";
@@ -20,7 +21,12 @@ export const CustomTimerModal: React.FC<CustomTimerModalProps> = ({
   onClose,
   onNotification,
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("duration");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Tab 1: Custom Duration inputs
   const [customHours, setCustomHours] = useState<number>(() => Math.floor(config.durationHours || 30));
@@ -67,7 +73,7 @@ export const CustomTimerModal: React.FC<CustomTimerModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Compute live remaining ms
   const isLive = config.eventStatus === "LIVE";
@@ -204,9 +210,9 @@ export const CustomTimerModal: React.FC<CustomTimerModalProps> = ({
     { label: "15 Minutes (Demo)", h: 0, m: 15 },
   ];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-xl rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-4.5 sm:p-7 overflow-hidden max-h-[90vh] overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-xl rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] p-5 sm:p-7 overflow-hidden max-h-[85vh] overflow-y-auto">
         
         {/* Glow Effects */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -611,6 +617,7 @@ export const CustomTimerModal: React.FC<CustomTimerModalProps> = ({
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

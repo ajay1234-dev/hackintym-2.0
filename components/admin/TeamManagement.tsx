@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Team } from "@/types";
 import {
   createTeam,
@@ -17,9 +18,14 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
   teams,
   onNotification,
 }) => {
+  const [mounted, setMounted] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close modals on Escape key
   useEffect(() => {
@@ -321,8 +327,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
       )}
 
       {/* CREATE TEAM MODAL — SCROLLABLE BODY WITH STICKY ACTION FOOTER */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      {isAddModalOpen && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
           <div className="relative w-full max-w-lg rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
@@ -462,12 +468,13 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* EDIT TEAM MODAL — SCROLLABLE BODY WITH STICKY ACTION FOOTER */}
-      {editingTeam && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      {editingTeam && mounted && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
           <div className="relative w-full max-w-lg rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.95)] overflow-hidden max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
@@ -577,7 +584,8 @@ export const TeamManagement: React.FC<TeamManagementProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

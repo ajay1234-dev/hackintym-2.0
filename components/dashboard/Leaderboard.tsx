@@ -6,6 +6,7 @@ import { Team } from "@/types";
 import { TeamRow } from "./TeamRow";
 import { TeamCard } from "./TeamCard";
 import { TeamDetailsModal } from "./TeamDetailsModal";
+import { VintageGameBoardCeremony } from "./VintageGameBoardCeremony";
 
 interface LeaderboardProps {
   teams: Team[];
@@ -18,6 +19,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 }) => {
   const [selectedTrack, setSelectedTrack] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [isCeremonyOpen, setIsCeremonyOpen] = useState(false);
 
   // Sync selectedTeam with the latest realtime teams array so modal always shows up-to-date avatar & score
   const activeSelectedTeam = useMemo(() => {
@@ -56,27 +58,40 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
   return (
     <section id="leaderboard" className="w-full">
-      {/* Track Filter Chips (if multiple categories exist) */}
-      {tracks.length > 2 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-4 scrollbar-none">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5 font-display">
-            <i className="bi bi-funnel-fill text-cyan-400" /> Category:
-          </span>
-          {tracks.map((track) => (
-            <button
-              key={track}
-              onClick={() => setSelectedTrack(track)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all font-sans ${
-                selectedTrack === track
-                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm"
-                  : "bg-slate-900/90 text-slate-400 hover:text-slate-200 border border-slate-800"
-              }`}
-            >
-              {track === "ALL" ? "All Categories" : track}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* Top Action Bar: Categories & Vintage Game Board Ceremony Launcher */}
+      <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
+        {tracks.length > 2 ? (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5 font-display">
+              <i className="bi bi-funnel-fill text-cyan-400" /> Category:
+            </span>
+            {tracks.map((track) => (
+              <button
+                key={track}
+                onClick={() => setSelectedTrack(track)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all font-sans ${
+                  selectedTrack === track
+                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-sm"
+                    : "bg-slate-900/90 text-slate-400 hover:text-slate-200 border border-slate-800"
+                }`}
+              >
+                {track === "ALL" ? "All Categories" : track}
+              </button>
+            ))}
+          </div>
+        ) : <div />}
+
+        {/* Vintage Game Board Score Ceremony Button */}
+        <button
+          onClick={() => setIsCeremonyOpen(true)}
+          disabled={teams.length === 0}
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-500/40 text-amber-300 hover:text-amber-200 font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-amber-950/40 font-display disabled:opacity-40 shrink-0"
+          title="Watch vintage arcade game board score reveal ceremony"
+        >
+          <i className="bi bi-joystick text-sm text-amber-400" />
+          <span>🎮 Game Board Ceremony</span>
+        </button>
+      </div>
 
       {/* Main Leaderboard Table / Cards */}
       {isLoading ? (
@@ -243,6 +258,14 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         team={activeSelectedTeam}
         topScore={maxScore}
         onClose={() => setSelectedTeam(null)}
+      />
+
+      {/* Vintage Game Board Scoring Ceremony */}
+      <VintageGameBoardCeremony
+        teams={teams}
+        isOpen={isCeremonyOpen}
+        onClose={() => setIsCeremonyOpen(false)}
+        title="LIVE LEADERBOARD SCORE CEREMONY"
       />
     </section>
   );

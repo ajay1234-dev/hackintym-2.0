@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Team } from "@/types";
+import { VintageScoreTicker } from "./VintageScoreTicker";
 
 interface TeamRowProps {
   team: Team;
@@ -244,15 +245,15 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 7. Total Score Column */}
       <td className="py-4 px-5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-3">
-          <span
-            className={`font-black font-mono-numbers leading-none tracking-tight ${
+          <VintageScoreTicker
+            value={team.score}
+            isChampion={rank === 1}
+            className={
               isTop7Section
                 ? "text-2xl sm:text-3xl text-white group-hover:text-rose-400 transition-colors"
                 : "text-xl sm:text-2xl text-slate-100 group-hover:text-rose-400 transition-colors"
-            }`}
-          >
-            {team.score}
-          </span>
+            }
+          />
           <div className="w-8 h-8 rounded-xl bg-slate-900 group-hover:bg-cyan-500/20 border border-slate-800 group-hover:border-cyan-500/50 flex items-center justify-center text-slate-400 group-hover:text-cyan-300 transition-all shadow-sm">
             <i className="bi bi-person-vcard text-sm" />
           </div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Team } from "@/types";
+import { VintageScoreTicker } from "./VintageScoreTicker";
 
 interface TeamCardProps {
   team: Team;
@@ -107,9 +108,11 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         </div>
 
         <div className="text-right">
-          <span className="text-2xl font-black font-mono-numbers text-white leading-none">
-            {team.score}
-          </span>
+          <VintageScoreTicker
+            value={team.score}
+            isChampion={rank === 1}
+            className="text-2xl font-black font-mono-numbers text-white leading-none"
+          />
           <span className="text-[10px] text-slate-400 ml-1 font-display uppercase tracking-wider block">
             score
           </span>

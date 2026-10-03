@@ -32,7 +32,7 @@
   <!-- Modular Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, onSnapshot, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, onSnapshot, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Application Configuration
     const appConfig = {
@@ -298,12 +298,12 @@
         }
 
         const teamDocRef = doc(db, "teams", selectedTeam.id || selectedTeam.teamId);
-        await updateDoc(teamDocRef, {
+        await setDoc(teamDocRef, {
           avatar: avatarUrl,
           tagline: taglineInput.value.trim(),
           profileLocked: true,
           updatedAt: Date.now()
-        });
+        }, { merge: true });
 
         showAlert(`Success! ${selectedTeam.teamName}'s profile photo and punchline have been submitted and locked. It is now active on the official leaderboard!`, "success");
         selectedFile = null;
@@ -311,7 +311,7 @@
       } catch (err) {
         console.error(err);
         if (err && (err.code === "permission-denied" || (err.message && err.message.includes("permission")))) {
-          showAlert("Permission Denied: Please update your Firestore Security Rules in the Firebase Console to allow team updates.", "error");
+          showAlert("Permission Denied: Please open Firebase Console -> Firestore Database -> Rules tab, paste the rules, and click 'Publish'!", "error");
         } else {
           showAlert(err?.message || "Failed to update profile. Please try again.", "error");
         }

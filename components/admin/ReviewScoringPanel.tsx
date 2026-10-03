@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Team } from "@/types";
 import { bulkPublishReviewScores } from "@/lib/firebase/firestore";
+import { VintageGameBoardCeremony } from "@/components/dashboard/VintageGameBoardCeremony";
 
 type ReviewNum = 1 | 2 | 3;
 
@@ -19,6 +20,7 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
   const [scores, setScores] = useState<Record<string, string>>({});
   const [isPublishing, setIsPublishing] = useState(false);
   const [published, setPublished] = useState<ReviewNum[]>([]);
+  const [isCeremonyOpen, setIsCeremonyOpen] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Pre-fill inputs from existing team review scores when team list or active review changes
@@ -222,12 +224,12 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
               })}
             </div>
 
-            {/* Publish Button */}
-            <div className="mt-4 flex items-center gap-3">
+            {/* Publish & Vintage Game Board Ceremony Buttons */}
+            <div className="mt-4 flex flex-col sm:flex-row items-center gap-3">
               <button
                 onClick={handlePublish}
                 disabled={isPublishing || teams.length === 0}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-black font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-950/30 disabled:opacity-40 disabled:cursor-not-allowed font-display"
+                className="w-full sm:flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-black font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-amber-950/30 disabled:opacity-40 disabled:cursor-not-allowed font-display"
               >
                 {isPublishing ? (
                   <>
@@ -241,15 +243,34 @@ export const ReviewScoringPanel: React.FC<ReviewScoringPanelProps> = ({
                   </>
                 )}
               </button>
+
+              <button
+                type="button"
+                onClick={() => setIsCeremonyOpen(true)}
+                disabled={teams.length === 0}
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/60 text-cyan-300 font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/40 font-display disabled:opacity-40"
+                title="Play vintage arcade ascending score ceremony from least score to Rank 1"
+              >
+                <i className="bi bi-joystick text-base text-cyan-400" />
+                <span>Launch Ceremony</span>
+              </button>
             </div>
 
             {/* Score totals hint */}
             <p className="mt-2 text-center text-[10px] text-slate-500 font-sans">
-              Total score = Review 1 + Review 2 + Review 3 · Leaderboard updates instantly
+              Total score = Review 1 + Review 2 + Review 3 · Vintage Ceremony reveals scores ascending to Rank 1
             </p>
           </>
         )}
       </div>
+
+      {/* VINTAGE GAME BOARD SCORING CEREMONY MODAL */}
+      <VintageGameBoardCeremony
+        teams={teams}
+        isOpen={isCeremonyOpen}
+        onClose={() => setIsCeremonyOpen(false)}
+        title={`REVIEW ${activeReview} • VINTAGE GAME BOARD CEREMONY`}
+      />
     </div>
   );
 };

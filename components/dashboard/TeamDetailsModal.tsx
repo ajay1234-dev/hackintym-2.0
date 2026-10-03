@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Team } from "@/types";
 
 interface TeamDetailsModalProps {
@@ -14,6 +15,12 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
   topScore,
   onClose,
 }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -24,7 +31,7 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [team, onClose]);
 
-  if (!team) return null;
+  if (!mounted || !team) return null;
 
   const hasScore = (team.score || 0) > 0;
   const scoreDeficit = hasScore ? Math.max(0, topScore - team.score) : 0;
@@ -73,8 +80,8 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
   const leaderName = team.members && team.members.length > 0 ? team.members[0] : null;
   const regularMembers = team.members && team.members.length > 1 ? team.members.slice(1) : [];
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/85 backdrop-blur-md animate-fadeIn">
       {/* Modal Box */}
       <div className="relative w-full max-w-xl rounded-3xl bg-slate-950 border border-slate-800 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] p-6 sm:p-8 overflow-hidden max-h-[92vh] overflow-y-auto">
         {/* Ambient Top Glow */}
@@ -295,6 +302,7 @@ export const TeamDetailsModal: React.FC<TeamDetailsModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

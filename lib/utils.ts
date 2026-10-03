@@ -164,6 +164,62 @@ class SoundManager {
     }
   }
 
+  // Vintage Arcade / Mechanical Ticker click
+  public playMechanicalTick() {
+    if (!this.enabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(1200 + Math.random() * 400, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + 0.03);
+    } catch {
+      // ignore
+    }
+  }
+
+  // Vintage arcade score lock chime
+  public playVintageChime() {
+    if (!this.enabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      [587.33, 880, 1174.66].forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+
+        gain.gain.setValueAtTime(0.12, now + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.3);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.3);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
   // Hackathon Event Start Fanfare
   public playEventStart() {
     if (!this.enabled) return;
@@ -186,6 +242,37 @@ class SoundManager {
 
         osc.start(now + i * 0.08);
         osc.stop(now + i * 0.08 + 0.4);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  // Grand Champion Victory Fanfare (for Rank 1 Ceremony)
+  public playVictoryFanfare() {
+    if (!this.enabled) return;
+    try {
+      const ctx = this.getContext();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      // Arpeggiated triumphant fanfare: C5 -> E5 -> G5 -> C6 -> E6 -> G6 with chords
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+
+        const duration = idx === notes.length - 1 ? 0.9 : 0.25;
+        gain.gain.setValueAtTime(0.15, now + idx * 0.07);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(now + idx * 0.07);
+        osc.stop(now + idx * 0.07 + duration);
       });
     } catch {
       // ignore
