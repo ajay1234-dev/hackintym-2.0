@@ -125,7 +125,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
     return filteredTeams.some((t) => (t.score || 0) > 0 && t.rank != null);
   }, [filteredTeams]);
 
-  // Determine whether clicked team receives the AvengerProfileModal or standard TeamDetailsModal
+  // Top-7 scored teams open the Avenger-themed profile modal
   const isTop7Selected = Boolean(
     activeSelectedTeam &&
       (activeSelectedTeam.score || 0) > 0 &&
@@ -291,7 +291,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                 </span>
               </div>
 
-              {/* Unified Desktop Table View — Hardware accelerated, zero-lag scrolling */}
+              {/* Unified Desktop Table View */}
               <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950 shadow-2xl">
                 <table className="w-full text-left border-collapse">
                   <thead>
@@ -341,9 +341,17 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         </div>
       )}
 
-      {/* ─── ULTRA-SMOOTH HARDWARE-ACCELERATED TEAM DETAILS MODAL ─── */}
+      {/* ─── MODALS: Avenger-themed for Top 7, Standard for all others ─── */}
       <AnimatePresence>
-        {activeSelectedTeam && (
+        {activeSelectedTeam && isTop7Selected && (
+          <AvengerProfileModal
+            team={activeSelectedTeam}
+            onClose={() => setSelectedTeam(null)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {activeSelectedTeam && !isTop7Selected && (
           <TeamDetailsModal
             team={activeSelectedTeam}
             topScore={maxScore}

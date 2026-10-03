@@ -37,7 +37,6 @@ export const CasioScoreScrambler: React.FC<CasioScoreScramblerProps> = ({
   const formatNum = (n: number) => String(n).padStart(minDigits, "0");
 
   useEffect(() => {
-    // If scrambling is active
     if (isScrambling) {
       prevScrambleRef.current = true;
       setJustLocked(false);
@@ -45,17 +44,17 @@ export const CasioScoreScrambler: React.FC<CasioScoreScramblerProps> = ({
       if (scrambleIntervalRef.current) clearInterval(scrambleIntervalRef.current);
 
       scrambleIntervalRef.current = setInterval(() => {
-        // Generate random digital digits
+        const len = Math.max(minDigits, String(value).length);
         let randomStr = "";
-        for (let i = 0; i < Math.max(minDigits, String(value).length); i++) {
+        for (let i = 0; i < len; i++) {
           randomStr += Math.floor(Math.random() * 10).toString();
         }
         setDisplayedText(randomStr);
 
-        if (playSound && Math.random() > 0.4) {
+        if (playSound && Math.random() > 0.5) {
           soundManager.playCasioScrambleTick();
         }
-      }, 45);
+      }, 30); // faster = smoother visual flutter
 
       return () => {
         if (scrambleIntervalRef.current) clearInterval(scrambleIntervalRef.current);
@@ -76,7 +75,7 @@ export const CasioScoreScrambler: React.FC<CasioScoreScramblerProps> = ({
           soundManager.playCasioBeep();
         }
         onLockIn?.();
-        const timeout = setTimeout(() => setJustLocked(false), 800);
+        const timeout = setTimeout(() => setJustLocked(false), 900);
         return () => clearTimeout(timeout);
       }
     }
@@ -84,11 +83,12 @@ export const CasioScoreScrambler: React.FC<CasioScoreScramblerProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center font-mono-numbers tracking-widest font-black tabular-nums transition-all select-none ${
+      style={{ willChange: "transform, filter" }}
+      className={`inline-flex items-center font-mono-numbers tracking-widest font-black tabular-nums select-none transform-gpu ${
         isScrambling
           ? "casio-flipping-bluered scale-105"
           : justLocked
-          ? "casio-locked-pulse text-cyan-300 drop-shadow-[0_0_12px_rgba(6,182,212,0.9)]"
+          ? "casio-locked-pulse text-cyan-300 drop-shadow-[0_0_14px_rgba(6,182,212,1)]"
           : isChampion
           ? "text-amber-300 drop-shadow-[0_0_10px_rgba(251,191,36,0.7)]"
           : "text-slate-100"

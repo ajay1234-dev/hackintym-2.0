@@ -243,14 +243,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 3. Review 1 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 1 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
-            <CasioScoreScrambler
-              value={sessionScores[teamKey] || 0}
-              isScrambling={true}
-              minDigits={2}
-              className="text-xs font-mono-numbers"
-            />
-          </div>
+          <CasioScoreScrambler
+            value={sessionScores[teamKey] || 0}
+            isScrambling={true}
+            minDigits={2}
+            className="text-xs font-mono-numbers"
+          />
         ) : (
           <span
             className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
@@ -267,14 +265,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 4. Review 2 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 2 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
-            <CasioScoreScrambler
-              value={sessionScores[teamKey] || 0}
-              isScrambling={true}
-              minDigits={2}
-              className="text-xs font-mono-numbers"
-            />
-          </div>
+          <CasioScoreScrambler
+            value={sessionScores[teamKey] || 0}
+            isScrambling={true}
+            minDigits={2}
+            className="text-xs font-mono-numbers"
+          />
         ) : (
           <span
             className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
@@ -291,14 +287,12 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 5. Review 3 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
         {isFlipping && publishingSession?.reviewNum === 3 ? (
-          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-rose-500/70 items-center justify-center shadow-[0_0_12px_rgba(56,189,248,0.4),0_0_6px_rgba(244,63,94,0.4)]">
-            <CasioScoreScrambler
-              value={sessionScores[teamKey] || 0}
-              isScrambling={true}
-              minDigits={2}
-              className="text-xs font-mono-numbers"
-            />
-          </div>
+          <CasioScoreScrambler
+            value={sessionScores[teamKey] || 0}
+            isScrambling={true}
+            minDigits={2}
+            className="text-xs font-mono-numbers"
+          />
         ) : (
           <span
             className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
@@ -323,15 +317,13 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       <td className="py-4 px-5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-3">
           {isFlipping ? (
-            <div className="px-3.5 py-1.5 rounded-xl bg-slate-950 border-2 border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.5),0_0_12px_rgba(56,189,248,0.5)] flex items-center justify-center">
-              <CasioScoreScrambler
-                value={team.score}
-                isScrambling={true}
-                minDigits={2}
-                playSound={isActiveTarget}
-                className="text-2xl sm:text-3xl font-black font-mono-numbers tracking-widest"
-              />
-            </div>
+            <CasioScoreScrambler
+              value={team.score}
+              isScrambling={true}
+              minDigits={2}
+              playSound={isActiveTarget}
+              className="text-2xl sm:text-3xl font-black font-mono-numbers tracking-widest"
+            />
           ) : (
             <VintageScoreTicker
               value={team.score}
