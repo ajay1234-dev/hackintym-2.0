@@ -24,6 +24,17 @@ export interface Team {
   scoreDelta?: number;
 }
 
+export interface PublishingSession {
+  id: string;
+  reviewNum: 1 | 2 | 3;
+  startedAt: number;
+  status: "IN_PROGRESS" | "COMPLETED";
+  scores: Record<string, number>; // teamId -> review score
+  sequence: string[]; // teamIds ordered from lowest projected total to highest (Rank 1)
+  lockedTeamIds: string[]; // teamIds that have finished flipping and locked in
+  activeTeamId?: string | null; // teamId currently active / locking in
+}
+
 export interface HackathonConfig {
   eventName: string;
   eventStatus: EventStatus;
@@ -33,6 +44,7 @@ export interface HackathonConfig {
   currentRound?: string;
   pausedRemainingMs?: number | null;
   updatedAt: number;
+  publishingSession?: PublishingSession | null;
 }
 
 export interface AdminUser {

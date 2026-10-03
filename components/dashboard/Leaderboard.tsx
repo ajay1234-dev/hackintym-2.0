@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { Team } from "@/types";
+import { Team, HackathonConfig } from "@/types";
 import { TeamRow } from "./TeamRow";
 import { TeamCard } from "./TeamCard";
 import { TeamDetailsModal } from "./TeamDetailsModal";
-import { VintageGameBoardCeremony } from "./VintageGameBoardCeremony";
+import { subscribeToHackathonConfig } from "@/lib/firebase/firestore";
 
 interface LeaderboardProps {
   teams: Team[];
@@ -19,9 +19,19 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 }) => {
   const [selectedTrack, setSelectedTrack] = useState<string>("ALL");
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [isCeremonyOpen, setIsCeremonyOpen] = useState(false);
+  const [config, setConfig] = useState<HackathonConfig | null>(null);
 
-  // Sync selectedTeam with the latest realtime teams array so modal always shows up-to-date avatar & score
+  // Subscribe to realtime config for live publishing session sync across all screens
+  useEffect(() => {
+    return subscribeToHackathonConfig((newConfig) => {
+      setConfig(newConfig);
+    });
+  }, []);
+
+  const publishingSession = config?.publishingSession || null;
+  const isPublishingActive = publishingSession && publishingSession.status === "IN_PROGRESS";
+
+  // Sync selectedTeam with latest realtime teams array so modal always shows up-to-date avatar & score
   const activeSelectedTeam = useMemo(() => {
     if (!selectedTeam) return null;
     return (
@@ -56,7 +66,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
 
   return (
     <section id="leaderboard" className="w-full">
-      {/* Top Action Bar: Categories & Vintage Game Board Ceremony Launcher */}
+      {/* Top Action Bar: Categories & Status */}
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         {tracks.length > 2 ? (
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none flex-1">
@@ -77,19 +87,41 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
               </button>
             ))}
           </div>
-        ) : <div />}
+        ) : (
+          <div />
+        )}
 
-        {/* Vintage Game Board Score Ceremony Button */}
-        <button
-          onClick={() => setIsCeremonyOpen(true)}
-          disabled={teams.length === 0}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-cyan-500/20 hover:from-amber-500/30 hover:to-cyan-500/30 border border-amber-500/40 text-amber-300 hover:text-amber-200 font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg shadow-amber-950/40 font-display disabled:opacity-40 shrink-0"
-          title="Watch vintage arcade game board score reveal ceremony"
-        >
-          <i className="bi bi-joystick text-sm text-amber-400" />
-          <span>🎮 Game Board Ceremony</span>
-        </button>
+        {/* Live sync status pill */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800/80 text-[11px] text-slate-400 font-mono-numbers">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>REALTIME SYNC ACTIVE</span>
+        </div>
       </div>
+
+      {/* Live Scoring Ceremony Active Banner */}
+      {isPublishingActive && (
+        <div className="mb-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-slate-900/90 to-cyan-500/15 border-2 border-amber-400/70 shadow-2xl shadow-amber-950/40 animate-pulse flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300 shrink-0 shadow-[0_0_15px_rgba(251,191,36,0.5)]">
+              <i className="bi bi-broadcast text-lg animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black uppercase tracking-wider text-amber-300 font-display flex items-center gap-2">
+                <span>Review {publishingSession.reviewNum} Score Publishing Ceremony</span>
+              </h4>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Rapid numbers flipping live • Marks revealing sequentially from least to Rank 1
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-amber-400/40 font-mono-numbers text-xs font-bold text-amber-300">
+            <span>{publishingSession.lockedTeamIds?.length || 0}</span>
+            <span className="text-slate-500">/</span>
+            <span>{publishingSession.sequence?.length || 0} Teams Locked In</span>
+          </div>
+        </div>
+      )}
 
       {/* Main Leaderboard Table / Cards */}
       {isLoading ? (
@@ -123,7 +155,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                     Live Standings
                   </span>
                   <span className="text-[11px] text-slate-400 font-sans hidden sm:inline">
-                    • Top 7 highlighted with podium styling • Live auto-reordering
+                    • Top 7 highlighted with podium glow • Dynamic 60fps auto-reordering
                   </span>
                 </>
               ) : (
@@ -144,7 +176,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
           </div>
 
           {/* Unified Desktop Table View */}
-          <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/85 shadow-2xl backdrop-blur-sm">
+          <div className="hidden md:block rounded-3xl overflow-hidden border border-slate-800/80 bg-slate-950/90 shadow-[0_20px_50px_rgba(0,0,0,0.85)] backdrop-blur-2xl">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-800 text-[11px] font-black uppercase tracking-wider text-slate-400 font-display bg-slate-900/80">
@@ -154,7 +186,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   <th className="py-4 px-3 text-center w-24">Review 2</th>
                   <th className="py-4 px-3 text-center w-24">Review 3</th>
                   <th className="py-4 px-3 text-center w-28">Points</th>
-                  <th className="py-4 px-6 text-right w-40">Total Score</th>
+                  <th className="py-4 px-6 text-right w-44">Total Score</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -164,6 +196,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                       key={team.id || team.teamId}
                       team={team}
                       maxScore={maxScore}
+                      publishingSession={publishingSession}
                       isTop7Section={(team.score || 0) > 0 && team.rank != null && team.rank <= 7}
                       onSelectTeam={(t) => setSelectedTeam(t)}
                     />
@@ -181,6 +214,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
                   key={team.id || team.teamId}
                   team={team}
                   maxScore={maxScore}
+                  publishingSession={publishingSession}
                   onSelectTeam={(t) => setSelectedTeam(t)}
                 />
               ))}
@@ -194,14 +228,6 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({
         team={activeSelectedTeam}
         topScore={maxScore}
         onClose={() => setSelectedTeam(null)}
-      />
-
-      {/* Vintage Game Board Scoring Ceremony */}
-      <VintageGameBoardCeremony
-        teams={teams}
-        isOpen={isCeremonyOpen}
-        onClose={() => setIsCeremonyOpen(false)}
-        title="LIVE LEADERBOARD SCORE CEREMONY"
       />
     </section>
   );

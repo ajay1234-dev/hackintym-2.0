@@ -2,19 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Team } from "@/types";
+import { Team, PublishingSession } from "@/types";
 import { VintageScoreTicker } from "./VintageScoreTicker";
+import { CasioScoreScrambler } from "./CasioScoreScrambler";
 
 interface TeamRowProps {
   team: Team;
   maxScore: number;
   isTop7Section?: boolean;
+  publishingSession?: PublishingSession | null;
   onSelectTeam: (team: Team) => void;
 }
 
 export const TeamRow: React.FC<TeamRowProps> = ({
   team,
   isTop7Section = false,
+  publishingSession,
   onSelectTeam,
 }) => {
   const [highlight, setHighlight] = useState(false);
@@ -22,20 +25,52 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   useEffect(() => {
     setHighlight(true);
-    const timer = setTimeout(() => setHighlight(false), 1800);
+    const timer = setTimeout(() => setHighlight(false), 1600);
     return () => clearTimeout(timer);
   }, [team.score, team.points, team.review1Score, team.review2Score, team.review3Score]);
+
+  const teamKey = team.id || team.teamId;
+  const isSessionActive = publishingSession && publishingSession.status === "IN_PROGRESS";
+  const sessionScores = publishingSession?.scores || {};
+  const hasSessionScore = isSessionActive && (
+    teamKey in sessionScores || team.id in sessionScores || team.teamId in sessionScores
+  );
+
+  const isLockedIn = !isSessionActive || Boolean(
+    publishingSession?.lockedTeamIds?.includes(teamKey) ||
+    publishingSession?.lockedTeamIds?.includes(team.id) ||
+    publishingSession?.lockedTeamIds?.includes(team.teamId)
+  );
+
+  const isFlipping = Boolean(isSessionActive && hasSessionScore && !isLockedIn);
+  const isActiveTarget = Boolean(
+    isSessionActive && (
+      publishingSession?.activeTeamId === teamKey ||
+      publishingSession?.activeTeamId === team.id ||
+      publishingSession?.activeTeamId === team.teamId
+    )
+  );
 
   const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
   const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
   const getRankBadge = () => {
+    if (isFlipping) {
+      return (
+        <span
+          title="Flipping & evaluating marks..."
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-400/60 text-amber-300 font-mono-numbers text-xs font-bold animate-pulse"
+        >
+          <i className="bi bi-arrow-repeat animate-spin text-xs" />
+        </span>
+      );
+    }
     if (!rank || !hasScore) {
       return (
         <span
           title="Awaiting Review Evaluation"
-          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-900/60 border border-slate-800/80 text-slate-500 font-mono-numbers text-sm font-semibold"
+          className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900/60 border border-slate-800/80 text-slate-500 font-mono-numbers text-sm font-semibold"
         >
           —
         </span>
@@ -43,28 +78,28 @@ export const TeamRow: React.FC<TeamRowProps> = ({
     }
     if (rank === 1) {
       return (
-        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-amber-400/20 border-2 border-amber-400 text-amber-300 font-black text-base font-mono-numbers shadow-[0_0_15px_rgba(251,191,36,0.35)]">
+        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-300 font-black text-base font-mono-numbers shadow-[0_0_20px_rgba(251,191,36,0.4)]">
           <i className="bi bi-trophy-fill text-xs" />1
         </span>
       );
     }
     if (rank === 2) {
       return (
-        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-slate-700/60 border-2 border-slate-300 text-slate-100 font-black text-base font-mono-numbers shadow-md">
+        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-gradient-to-b from-slate-600/30 to-slate-800/20 border-2 border-slate-300 text-slate-100 font-black text-base font-mono-numbers shadow-md">
           <i className="bi bi-award-fill text-xs" />2
         </span>
       );
     }
     if (rank === 3) {
       return (
-        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-amber-900/60 border-2 border-amber-600 text-amber-400 font-black text-base font-mono-numbers shadow-md">
+        <span className="inline-flex items-center justify-center gap-1 w-10 h-10 rounded-xl bg-gradient-to-b from-amber-800/40 to-amber-950/20 border-2 border-amber-600 text-amber-400 font-black text-base font-mono-numbers shadow-md">
           <i className="bi bi-award text-xs" />3
         </span>
       );
     }
     if (rank <= 7) {
       return (
-        <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-cyan-900/30 border border-cyan-500/60 text-cyan-300 font-black text-sm font-mono-numbers shadow-sm">
+        <span className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-cyan-950/40 border border-cyan-500/60 text-cyan-300 font-black text-sm font-mono-numbers shadow-sm">
           #{rank}
         </span>
       );
@@ -93,8 +128,10 @@ export const TeamRow: React.FC<TeamRowProps> = ({
   };
 
   // Row styling
-  const rowClass = highlight
-    ? "bg-rose-500/20 border-rose-400/60 shadow-lg shadow-rose-950/40"
+  const rowClass = highlight || isActiveTarget
+    ? "bg-amber-500/15 border-amber-400/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.003] z-20"
+    : isFlipping
+    ? "bg-slate-900/40 border-slate-800/80 opacity-90"
     : isTop7Section && rank && hasScore && rank <= 7
     ? rank === 1
       ? "team-row-rank1 hover:brightness-110"
@@ -107,9 +144,9 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   return (
     <motion.tr
-      id={`team-row-${team.id || team.teamId}`}
+      id={`team-row-${teamKey}`}
       layout
-      layoutId={team.id || team.teamId}
+      layoutId={teamKey}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -118,7 +155,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
         opacity: { duration: 0.2 },
       }}
       onClick={() => onSelectTeam(team)}
-      className={`motion-row group cursor-pointer transition-colors duration-200 border-b border-slate-800/60 ${rowClass}`}
+      className={`motion-row group cursor-pointer transition-all duration-200 border-b border-slate-800/60 ${rowClass}`}
       title="Click to view full team card and members"
     >
       {/* 1. Rank Column */}
@@ -138,16 +175,16 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               src={team.avatar}
               alt={team.teamName}
               onError={() => setImgError(true)}
-              className={`shrink-0 rounded-xl object-cover border shadow-sm ${
+              className={`shrink-0 rounded-2xl object-cover border shadow-sm ${
                 isTop7Section
-                  ? "w-10 h-10 border-amber-400/60 shadow-[0_0_10px_rgba(251,191,36,0.3)]"
-                  : "w-8 h-8 border-slate-700"
+                  ? "w-11 h-11 border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.3)]"
+                  : "w-9 h-9 border-slate-700"
               }`}
             />
           ) : (
             <div
-              className={`shrink-0 rounded-xl flex items-center justify-center font-black font-mono-numbers border shadow-sm ${
-                isTop7Section ? "w-10 h-10 text-sm" : "w-8 h-8 text-xs"
+              className={`shrink-0 rounded-2xl flex items-center justify-center font-black font-mono-numbers border shadow-sm ${
+                isTop7Section ? "w-11 h-11 text-sm" : "w-9 h-9 text-xs"
               } ${
                 rank === 1 && hasScore
                   ? "bg-amber-500/20 border-amber-400 text-amber-300"
@@ -175,11 +212,11 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               >
                 {team.teamName}
               </span>
-              <span className="text-[10px] font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800 font-mono-numbers">
+              <span className="text-[10px] font-bold text-cyan-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 font-mono-numbers">
                 {team.teamId}
               </span>
               {isTop7Section && hasScore && rank != null && rank <= 3 && (
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-display">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 font-display">
                   {rank === 1 ? "CHAMPION" : rank === 2 ? "RUNNER-UP" : "PODIUM"}
                 </span>
               )}
@@ -199,41 +236,74 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
       {/* 3. Review 1 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
-        <span
-          className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
-            (team.review1Score || 0) > 0
-              ? "text-sky-300 bg-sky-500/10 border-sky-500/30 shadow-sm"
-              : "text-slate-600 bg-slate-950 border-slate-900"
-          }`}
-        >
-          {team.review1Score || 0}
-        </span>
+        {isFlipping && publishingSession?.reviewNum === 1 ? (
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          </div>
+        ) : (
+          <span
+            className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
+              (team.review1Score || 0) > 0
+                ? "text-sky-300 bg-sky-500/10 border-sky-500/30 shadow-sm"
+                : "text-slate-600 bg-slate-950 border-slate-900"
+            }`}
+          >
+            {team.review1Score || 0}
+          </span>
+        )}
       </td>
 
       {/* 4. Review 2 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
-        <span
-          className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
-            (team.review2Score || 0) > 0
-              ? "text-violet-300 bg-violet-500/10 border-violet-500/30 shadow-sm"
-              : "text-slate-600 bg-slate-950 border-slate-900"
-          }`}
-        >
-          {team.review2Score || 0}
-        </span>
+        {isFlipping && publishingSession?.reviewNum === 2 ? (
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          </div>
+        ) : (
+          <span
+            className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
+              (team.review2Score || 0) > 0
+                ? "text-violet-300 bg-violet-500/10 border-violet-500/30 shadow-sm"
+                : "text-slate-600 bg-slate-950 border-slate-900"
+            }`}
+          >
+            {team.review2Score || 0}
+          </span>
+        )}
       </td>
 
       {/* 5. Review 3 Column */}
       <td className="py-4 px-3 text-center whitespace-nowrap">
-        <span
-          className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
-            (team.review3Score || 0) > 0
-              ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/30 shadow-sm"
-              : "text-slate-600 bg-slate-950 border-slate-900"
-          }`}
-        >
-          {team.review3Score || 0}
-        </span>
+        {isFlipping && publishingSession?.reviewNum === 3 ? (
+          <div className="inline-flex min-w-[54px] h-8 px-2 rounded-xl bg-slate-950 border border-amber-400/80 items-center justify-center shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          </div>
+        ) : (
+          <span
+            className={`inline-block font-mono-numbers font-black text-sm px-3 py-1 rounded-xl border ${
+              (team.review3Score || 0) > 0
+                ? "text-emerald-300 bg-emerald-500/10 border-emerald-500/30 shadow-sm"
+                : "text-slate-600 bg-slate-950 border-slate-900"
+            }`}
+          >
+            {team.review3Score || 0}
+          </span>
+        )}
       </td>
 
       {/* 6. Individual Points Column */}
@@ -246,15 +316,28 @@ export const TeamRow: React.FC<TeamRowProps> = ({
       {/* 7. Total Score Column */}
       <td className="py-4 px-5 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-3">
-          <VintageScoreTicker
-            value={team.score}
-            isChampion={rank === 1}
-            className={
-              isTop7Section
-                ? "text-2xl sm:text-3xl text-white group-hover:text-rose-400 transition-colors"
-                : "text-xl sm:text-2xl text-slate-100 group-hover:text-rose-400 transition-colors"
-            }
-          />
+          {isFlipping ? (
+            <div className="px-3 py-1.5 rounded-xl bg-slate-950 border-2 border-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] flex items-center justify-center">
+              <CasioScoreScrambler
+                value={team.score}
+                isScrambling={true}
+                minDigits={2}
+                playSound={isActiveTarget}
+                className="text-2xl sm:text-3xl text-amber-300 font-black font-mono-numbers tracking-widest"
+              />
+            </div>
+          ) : (
+            <VintageScoreTicker
+              value={team.score}
+              isChampion={rank === 1 && hasScore}
+              className={
+                isTop7Section
+                  ? "text-2xl sm:text-3xl text-white group-hover:text-amber-300 transition-colors"
+                  : "text-xl sm:text-2xl text-slate-100 group-hover:text-amber-300 transition-colors"
+              }
+            />
+          )}
+
           <div className="w-8 h-8 rounded-xl bg-slate-900 group-hover:bg-cyan-500/20 border border-slate-800 group-hover:border-cyan-500/50 flex items-center justify-center text-slate-400 group-hover:text-cyan-300 transition-all shadow-sm">
             <i className="bi bi-person-vcard text-sm" />
           </div>

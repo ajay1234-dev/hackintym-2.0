@@ -2,17 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Team } from "@/types";
+import { Team, PublishingSession } from "@/types";
 import { VintageScoreTicker } from "./VintageScoreTicker";
+import { CasioScoreScrambler } from "./CasioScoreScrambler";
 
 interface TeamCardProps {
   team: Team;
   maxScore: number;
+  publishingSession?: PublishingSession | null;
   onSelectTeam: (team: Team) => void;
 }
 
 export const TeamCard: React.FC<TeamCardProps> = ({
   team,
+  publishingSession,
   onSelectTeam,
 }) => {
   const [highlight, setHighlight] = useState(false);
@@ -20,9 +23,31 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
   useEffect(() => {
     setHighlight(true);
-    const timer = setTimeout(() => setHighlight(false), 1800);
+    const timer = setTimeout(() => setHighlight(false), 1600);
     return () => clearTimeout(timer);
   }, [team.score, team.points, team.review1Score, team.review2Score, team.review3Score]);
+
+  const teamKey = team.id || team.teamId;
+  const isSessionActive = publishingSession && publishingSession.status === "IN_PROGRESS";
+  const sessionScores = publishingSession?.scores || {};
+  const hasSessionScore = isSessionActive && (
+    teamKey in sessionScores || team.id in sessionScores || team.teamId in sessionScores
+  );
+
+  const isLockedIn = !isSessionActive || Boolean(
+    publishingSession?.lockedTeamIds?.includes(teamKey) ||
+    publishingSession?.lockedTeamIds?.includes(team.id) ||
+    publishingSession?.lockedTeamIds?.includes(team.teamId)
+  );
+
+  const isFlipping = Boolean(isSessionActive && hasSessionScore && !isLockedIn);
+  const isActiveTarget = Boolean(
+    isSessionActive && (
+      publishingSession?.activeTeamId === teamKey ||
+      publishingSession?.activeTeamId === team.id ||
+      publishingSession?.activeTeamId === team.teamId
+    )
+  );
 
   const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
@@ -30,6 +55,14 @@ export const TeamCard: React.FC<TeamCardProps> = ({
   const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
   const getRankBadge = () => {
+    if (isFlipping) {
+      return (
+        <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-300 font-mono-numbers font-bold text-xs flex items-center gap-1.5 animate-pulse">
+          <i className="bi bi-arrow-repeat animate-spin text-xs" />
+          <span>EVALUATING</span>
+        </span>
+      );
+    }
     if (!rank || !hasScore) {
       return (
         <span className="px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-500 font-mono-numbers font-bold text-xs">
@@ -39,7 +72,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
     }
     if (rank === 1) {
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 border border-amber-400 text-amber-300 font-mono-numbers font-black text-xs shadow-sm flex items-center gap-1">
+        <span className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-400 text-amber-300 font-mono-numbers font-black text-xs shadow-sm flex items-center gap-1">
           <i className="bi bi-trophy-fill text-amber-400 text-xs" /> #1 CHAMPION
         </span>
       );
@@ -74,9 +107,9 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
   return (
     <motion.div
-      id={`team-card-${team.id || team.teamId}`}
+      id={`team-card-${teamKey}`}
       layout
-      layoutId={`card-${team.id || team.teamId}`}
+      layoutId={`card-${teamKey}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -86,11 +119,13 @@ export const TeamCard: React.FC<TeamCardProps> = ({
       }}
       onClick={() => onSelectTeam(team)}
       className={`p-4 rounded-2xl border transition-all duration-200 cursor-pointer shadow-lg active:scale-[0.99] ${
-        highlight
-          ? "bg-rose-500/20 border-rose-500/60 shadow-rose-950/40"
+        highlight || isActiveTarget
+          ? "bg-amber-500/15 border-amber-400/90 shadow-[0_0_25px_rgba(251,191,36,0.35)] scale-[1.01]"
+          : isFlipping
+          ? "bg-slate-900/60 border-slate-800/80"
           : isTop7
           ? rank === 1
-            ? "bg-gradient-to-r from-amber-500/10 via-slate-900/90 to-slate-950 border-amber-500/40"
+            ? "bg-gradient-to-r from-amber-500/15 via-slate-900/90 to-slate-950 border-amber-500/50 shadow-amber-950/20"
             : rank === 2
             ? "bg-gradient-to-r from-slate-700/20 via-slate-900/90 to-slate-950 border-slate-400/40"
             : rank === 3
@@ -103,19 +138,31 @@ export const TeamCard: React.FC<TeamCardProps> = ({
       <div className="flex items-center justify-between gap-2 mb-2.5">
         <div className="flex items-center gap-2 flex-wrap">
           {getRankBadge()}
-          <span className="text-[11px] font-bold text-slate-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800 font-mono-numbers">
+          <span className="text-[11px] font-bold text-cyan-400 bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-800 font-mono-numbers">
             {team.teamId}
           </span>
         </div>
 
         <div className="text-right">
-          <VintageScoreTicker
-            value={team.score}
-            isChampion={rank === 1}
-            className="text-2xl font-black font-mono-numbers text-white leading-none"
-          />
-          <span className="text-[10px] text-slate-400 ml-1 font-display uppercase tracking-wider block">
-            score
+          {isFlipping ? (
+            <div className="px-2.5 py-1 rounded-xl bg-slate-950 border border-amber-400/80 shadow-[0_0_15px_rgba(251,191,36,0.4)] flex items-center justify-center">
+              <CasioScoreScrambler
+                value={team.score}
+                isScrambling={true}
+                minDigits={2}
+                playSound={isActiveTarget}
+                className="text-2xl font-black font-mono-numbers text-amber-300 leading-none"
+              />
+            </div>
+          ) : (
+            <VintageScoreTicker
+              value={team.score}
+              isChampion={rank === 1 && hasScore}
+              className="text-2xl font-black font-mono-numbers text-white leading-none"
+            />
+          )}
+          <span className="text-[10px] text-slate-400 ml-1 font-display uppercase tracking-wider block mt-0.5">
+            total score
           </span>
         </div>
       </div>
@@ -157,27 +204,54 @@ export const TeamCard: React.FC<TeamCardProps> = ({
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R1
           </span>
-          <span className="font-mono-numbers font-bold text-xs text-sky-400">
-            {team.review1Score || 0}
-          </span>
+          {isFlipping && publishingSession?.reviewNum === 1 ? (
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          ) : (
+            <span className="font-mono-numbers font-bold text-xs text-sky-400">
+              {team.review1Score || 0}
+            </span>
+          )}
         </div>
 
         <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800">
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R2
           </span>
-          <span className="font-mono-numbers font-bold text-xs text-violet-400">
-            {team.review2Score || 0}
-          </span>
+          {isFlipping && publishingSession?.reviewNum === 2 ? (
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          ) : (
+            <span className="font-mono-numbers font-bold text-xs text-violet-400">
+              {team.review2Score || 0}
+            </span>
+          )}
         </div>
 
         <div className="p-1.5 rounded-lg bg-slate-950/80 border border-slate-800">
           <span className="block text-[9px] font-bold uppercase text-slate-500 font-display">
             R3
           </span>
-          <span className="font-mono-numbers font-bold text-xs text-emerald-400">
-            {team.review3Score || 0}
-          </span>
+          {isFlipping && publishingSession?.reviewNum === 3 ? (
+            <CasioScoreScrambler
+              value={sessionScores[teamKey] || 0}
+              isScrambling={true}
+              minDigits={2}
+              className="text-xs text-amber-300 font-mono-numbers"
+            />
+          ) : (
+            <span className="font-mono-numbers font-bold text-xs text-emerald-400">
+              {team.review3Score || 0}
+            </span>
+          )}
         </div>
 
         <div className="p-1.5 rounded-lg bg-cyan-950/30 border border-cyan-500/20">

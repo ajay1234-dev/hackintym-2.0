@@ -7,7 +7,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db, isFirebaseConfigured } from "./config";
-import { Team, HackathonConfig, EventStatus } from "@/types";
+import { Team, HackathonConfig, EventStatus, PublishingSession } from "@/types";
 import { INITIAL_HACKATHON_CONFIG } from "./mockData";
 
 const TEAMS_KEY = "hackintime_teams_data";
@@ -254,6 +254,7 @@ export function subscribeToHackathonConfig(
               currentRound: data.currentRound || "",
               pausedRemainingMs: data.pausedRemainingMs != null ? Number(data.pausedRemainingMs) : null,
               updatedAt: data.updatedAt || Date.now(),
+              publishingSession: (data.publishingSession as PublishingSession) || null,
             };
             saveLocalConfig(configObj);
             callback(configObj);
@@ -327,6 +328,149 @@ export async function bulkPublishReviewScores(
       await batch.commit();
     } catch (err) {
       console.error("Firestore bulkPublishReviewScores error:", err);
+    }
+  }
+}
+
+/**
+ * Starts a live score publishing ceremony on the leaderboard.
+ * scores: { [teamId]: number } - raw review scores entered by admin
+ * sequence: array of team IDs sorted ascending from lowest projected total score up to Rank 1 (highest)
+ */
+export async function startLivePublishingSession(
+  reviewNum: 1 | 2 | 3,
+  scores: Record<string, number>,
+  sequence: string[]
+): Promise<PublishingSession> {
+  const session: PublishingSession = {
+    id: `pub_${Date.now()}`,
+    reviewNum,
+    startedAt: Date.now(),
+    status: "IN_PROGRESS",
+    scores,
+    sequence,
+    lockedTeamIds: [],
+    activeTeamId: sequence.length > 0 ? sequence[0] : null,
+  };
+
+  const cur = getLocalConfig();
+  const updatedConfig: HackathonConfig = {
+    ...cur,
+    publishingSession: session,
+    updatedAt: Date.now(),
+  };
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "hackathon", "config"), updatedConfig, { merge: true });
+    } catch (err) {
+      console.error("Firestore startLivePublishingSession error:", err);
+    }
+  }
+
+  return session;
+}
+
+/**
+ * Locks in one team's review score during the live publishing ceremony.
+ * Updates the team's review score and total score in Firestore & local storage,
+ * and advances the active team in the publishing session.
+ */
+export async function advanceLivePublishingSession(
+  teamId: string,
+  reviewNum: 1 | 2 | 3,
+  reviewScore: number
+): Promise<void> {
+  const key = `review${reviewNum}Score` as "review1Score" | "review2Score" | "review3Score";
+
+  // 1. Update the team in local storage & Firestore
+  await updateTeam(teamId, { [key]: reviewScore });
+
+  // 2. Update the session state
+  const cur = getLocalConfig();
+  if (!cur.publishingSession) return;
+
+  const currentLocked = cur.publishingSession.lockedTeamIds || [];
+  const nextLocked = Array.from(new Set([...currentLocked, teamId]));
+  const seq = cur.publishingSession.sequence || [];
+  const currentIndex = seq.indexOf(teamId);
+  const nextTeamId = currentIndex >= 0 && currentIndex + 1 < seq.length ? seq[currentIndex + 1] : null;
+  const isFinished = nextLocked.length >= seq.length;
+
+  const updatedSession: PublishingSession = {
+    ...cur.publishingSession,
+    lockedTeamIds: nextLocked,
+    activeTeamId: isFinished ? null : nextTeamId,
+    status: isFinished ? "COMPLETED" : "IN_PROGRESS",
+  };
+
+  const updatedConfig: HackathonConfig = {
+    ...cur,
+    publishingSession: updatedSession,
+    updatedAt: Date.now(),
+  };
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "hackathon", "config"), updatedConfig, { merge: true });
+    } catch (err) {
+      console.error("Firestore advanceLivePublishingSession error:", err);
+    }
+  }
+}
+
+/**
+ * Fast-forward / complete all remaining teams in the publishing session immediately.
+ */
+export async function fastForwardLivePublishingSession(): Promise<void> {
+  const cur = getLocalConfig();
+  if (!cur.publishingSession) return;
+
+  const { reviewNum, scores, sequence } = cur.publishingSession;
+  await bulkPublishReviewScores(reviewNum, scores);
+
+  const updatedSession: PublishingSession = {
+    ...cur.publishingSession,
+    lockedTeamIds: sequence,
+    activeTeamId: null,
+    status: "COMPLETED",
+  };
+
+  const updatedConfig: HackathonConfig = {
+    ...cur,
+    publishingSession: updatedSession,
+    updatedAt: Date.now(),
+  };
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "hackathon", "config"), updatedConfig, { merge: true });
+    } catch (err) {
+      console.error("Firestore fastForwardLivePublishingSession error:", err);
+    }
+  }
+}
+
+/**
+ * Cancel or clear the active publishing session.
+ */
+export async function cancelLivePublishingSession(): Promise<void> {
+  const cur = getLocalConfig();
+  const updatedConfig: HackathonConfig = {
+    ...cur,
+    publishingSession: null,
+    updatedAt: Date.now(),
+  };
+  saveLocalConfig(updatedConfig);
+
+  if (isFirebaseConfigured && db) {
+    try {
+      await setDoc(doc(db, "hackathon", "config"), { publishingSession: null, updatedAt: Date.now() }, { merge: true });
+    } catch (err) {
+      console.error("Firestore cancelLivePublishingSession error:", err);
     }
   }
 }
