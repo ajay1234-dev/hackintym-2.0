@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Team, PublishingSession } from "@/types";
+import { getAvengerByRank } from "@/lib/avengers";
 import { VintageScoreTicker } from "./VintageScoreTicker";
 import { CasioScoreScrambler } from "./CasioScoreScrambler";
 
@@ -53,6 +54,7 @@ export const TeamRow: React.FC<TeamRowProps> = ({
 
   const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
+  const avenger = hasScore ? getAvengerByRank(rank) : null;
   const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
   const getRankBadge = () => {
@@ -215,9 +217,17 @@ export const TeamRow: React.FC<TeamRowProps> = ({
               <span className="text-[10px] font-bold text-cyan-400 bg-slate-900 px-2 py-0.5 rounded-md border border-slate-800 font-mono-numbers">
                 {team.teamId}
               </span>
-              {isTop7Section && hasScore && rank != null && rank <= 3 && (
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-300 font-display">
-                  {rank === 1 ? "CHAMPION" : rank === 2 ? "RUNNER-UP" : "PODIUM"}
+              {avenger && hasScore && (
+                <span
+                  className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border font-display flex items-center gap-1.5 shadow-sm"
+                  style={{
+                    backgroundColor: avenger.colors.badgeBg,
+                    borderColor: avenger.colors.badgeBorder,
+                    color: avenger.colors.badgeText,
+                  }}
+                >
+                  <span>{avenger.heroName}</span>
+                  <span className="opacity-75 text-[9px] hidden sm:inline">• {avenger.title}</span>
                 </span>
               )}
             </div>

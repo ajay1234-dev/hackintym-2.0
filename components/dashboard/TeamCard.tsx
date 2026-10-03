@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Team, PublishingSession } from "@/types";
+import { getAvengerByRank } from "@/lib/avengers";
 import { VintageScoreTicker } from "./VintageScoreTicker";
 import { CasioScoreScrambler } from "./CasioScoreScrambler";
 
@@ -51,6 +52,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({
 
   const hasScore = (team.score || 0) > 0;
   const rank = team.rank;
+  const avenger = hasScore ? getAvengerByRank(rank) : null;
   const isTop7 = hasScore && rank != null && rank <= 7;
   const showAvatar = Boolean(team.avatar && team.avatar.trim() && !imgError);
 
@@ -70,31 +72,18 @@ export const TeamCard: React.FC<TeamCardProps> = ({
         </span>
       );
     }
-    if (rank === 1) {
+    if (avenger) {
       return (
-        <span className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-amber-600/10 border border-amber-400 text-amber-300 font-mono-numbers font-black text-xs shadow-sm flex items-center gap-1">
-          <i className="bi bi-trophy-fill text-amber-400 text-xs" /> #1 CHAMPION
-        </span>
-      );
-    }
-    if (rank === 2) {
-      return (
-        <span className="px-2.5 py-1 rounded-xl bg-slate-800 border border-slate-400 text-slate-200 font-mono-numbers font-black text-xs flex items-center gap-1">
-          <i className="bi bi-award-fill text-slate-300 text-xs" /> #2 RUNNER-UP
-        </span>
-      );
-    }
-    if (rank === 3) {
-      return (
-        <span className="px-2.5 py-1 rounded-xl bg-amber-950/70 border border-amber-600 text-amber-300 font-mono-numbers font-black text-xs flex items-center gap-1">
-          <i className="bi bi-award text-amber-400 text-xs" /> #3 PODIUM
-        </span>
-      );
-    }
-    if (rank <= 7) {
-      return (
-        <span className="px-2 py-0.5 rounded-xl bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 font-mono-numbers font-black text-xs shadow-sm">
-          #{rank} TOP 7
+        <span
+          className="px-2.5 py-1 rounded-xl border font-mono-numbers font-black text-xs shadow-sm flex items-center gap-1.5"
+          style={{
+            backgroundColor: avenger.colors.badgeBg,
+            borderColor: avenger.colors.badgeBorder,
+            color: avenger.colors.badgeText,
+          }}
+        >
+          <span>#{avenger.rank}</span>
+          <span>{avenger.heroName.toUpperCase()}</span>
         </span>
       );
     }
