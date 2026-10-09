@@ -70,6 +70,7 @@ export default function Home() {
       {/* Admin Broadcasted Fullscreen Cinematic Intro Overlay */}
       <AvengerCinematicIntro
         isOpen={isCinematicIntroActive}
+        teams={teams}
         onFinish={() => setIsCinematicIntroActive(false)}
       />
 
